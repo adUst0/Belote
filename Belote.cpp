@@ -270,6 +270,11 @@ void Belote::enterState(BeloteState state)
 
 void Belote::updateState()
 {
+	if (m_isStateMachinePaused)
+	{
+		return;
+	}
+
 	Utils::log("UPDATE {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (m_state)
@@ -370,11 +375,7 @@ void Belote::enterStartNewGameState()
 
 void Belote::updateStartNewGameState()
 {
-	const bool isCardDealingCompleted = true; // TODO: may change when playing UI animation
-	if (isCardDealingCompleted)
-	{
-		enterState(BeloteState::DealCardsToActivePlayer);
-	}
+	enterState(BeloteState::DealCardsToActivePlayer);
 }
 
 void Belote::enterDealCardsToActivePlayerState()
@@ -385,35 +386,31 @@ void Belote::enterDealCardsToActivePlayerState()
 
 void Belote::updateDealCardsToActivePlayerState()
 {
-	const bool isCardDealingCompleted = !static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->anySpriteMoving();
-	if (isCardDealingCompleted)
+	const bool allPlayersHaveTheSameNumberOfCards = getNextPlayer().getCards().size() == getActivePlayer().getCards().size();
+
+	m_activePlayerIndex = getNextPlayerIndex();
+
+	if (allPlayersHaveTheSameNumberOfCards)
 	{
-		const bool allPlayersHaveTheSameNumberOfCards = getNextPlayer().getCards().size() == getActivePlayer().getCards().size();
-
-		m_activePlayerIndex = getNextPlayerIndex();
-
-		if (allPlayersHaveTheSameNumberOfCards)
+		if (getActivePlayer().getCards().size() == 3)
 		{
-			if (getActivePlayer().getCards().size() == 3)
-			{
-				enterState(BeloteState::DealCardsToActivePlayer); // deal the rest 2 cards of the initial hand
-			}
-			else if (getActivePlayer().getCards().size() == 5)
-			{
-				m_contract = Contract::Num;
-				m_contractVotes.clear();
+			enterState(BeloteState::DealCardsToActivePlayer); // deal the rest 2 cards of the initial hand
+		}
+		else if (getActivePlayer().getCards().size() == 5)
+		{
+			m_contract = Contract::Num;
+			m_contractVotes.clear();
 
-				enterState(BeloteState::ChooseContract);
-			}
-			else
-			{
-				enterState(BeloteState::PlayTrick);
-			}
+			enterState(BeloteState::ChooseContract);
 		}
 		else
 		{
-			enterState(BeloteState::DealCardsToActivePlayer);
+			enterState(BeloteState::PlayTrick);
 		}
+	}
+	else
+	{
+		enterState(BeloteState::DealCardsToActivePlayer);
 	}
 }
 

@@ -282,6 +282,11 @@ void GameState::update(float dtSeconds)
 		return value.m_elapsedTimeSeconds >= value.m_moveTime;
 	});
 
+	if (m_movingSprites.empty())
+	{
+		m_belote.pauseStateMachine(false);
+	}
+
 	m_belote.updateState();
 }
 
@@ -338,4 +343,6 @@ void GameState::notifyCardDealing(const Player& player, const Card& card)
 	data.m_moveTime = 1.f;
 	data.m_sprite = &m_cardSprites[&card];
 	m_movingSprites[&card] = data;
+
+	m_belote.pauseStateMachine(true);
 }

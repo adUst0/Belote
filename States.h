@@ -71,8 +71,6 @@ public:
 	virtual void					update(float dtSeconds) override;
 	virtual void					draw() override;
 
-	bool							anySpriteMoving() const { return !m_movingSprites.empty(); }
-
 	void							notifyCardDealing(const Player& player, const Card& card);
 
 private:
