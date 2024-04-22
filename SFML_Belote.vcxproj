@@ -156,6 +156,7 @@
     <ClCompile Include="Belote.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Observer.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="States.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Belote.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="Observer.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="States.h" />

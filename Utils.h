@@ -23,5 +23,17 @@ namespace Utils
 	}
 
 	int randRanged(int min, int max); //range : [min, max]
+
+	template <typename Container, typename T>
+	T& emplace_back_unique(Container& container, T&& t)
+	{
+		auto iter = std::find(container.begin(), container.end(), t);
+		if (iter == container.end())
+		{
+			return container.emplace_back(std::forward<T>(t));
+		}
+
+		return *iter;
+	}
 };
 

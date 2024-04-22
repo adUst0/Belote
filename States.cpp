@@ -217,6 +217,8 @@ GameState::GameState(StateMachine& stateMachine)
 	PlayerPosition player2{ {windowSize.x - s_borderOffset - m_cardSize.x, windowSize.y / 2.f}, false, true }; // right
 	PlayerPosition player3{ {windowSize.x / 2.f, s_borderOffset}, true, false }; // up
 	m_playerPositions = { player0, player1, player2, player3 };
+
+	static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).addObserver(*this);
 }
 
 void GameState::createCardSprites()
@@ -226,9 +228,11 @@ void GameState::createCardSprites()
 		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
 		Application::getInstance()->getAssetsManager().loadTexture(path, path);
 
-		m_cardSprites.emplace(card, Application::getInstance()->getAssetsManager().getTexture(path));
-		sf::Sprite& sprite = m_cardSprites[card];
+		//m_cardSprites.emplace(card, Application::getInstance()->getAssetsManager().getTexture(path)); // CRASHING: todo - investigate
+		const sf::Texture& texture = Application::getInstance()->getAssetsManager().getTexture(path);
+		sf::Sprite sprite(texture);
 		sprite.setScale(s_cardScale);
+		m_cardSprites[card] = sprite;
 	}
 
 	m_cardSize = { m_cardSprites.begin()->second.getTexture()->getSize().x * s_cardScale.x, m_cardSprites.begin()->second.getTexture()->getSize().y * s_cardScale.y };
@@ -333,16 +337,16 @@ void GameState::draw()
 	window.display();
 }
 
-void GameState::notifyCardDealing(const Player& player, const Card& card)
+void GameState::notify(const NotifyCardDealing& data)
 {
-	const auto targetPosition = calculateCardPosition(player, player.getCards().size() - 1);
-	
-	SpriteMoveData data;
-	data.m_startPosition = m_deckPosition;
-	data.m_endPosition = targetPosition;
-	data.m_moveTime = 1.f;
-	data.m_sprite = &m_cardSprites[&card];
-	m_movingSprites[&card] = data;
+	const auto targetPosition = calculateCardPosition(data.m_player, data.m_player.getCards().size() - 1);
+
+	SpriteMoveData moveData;
+	moveData.m_startPosition = m_deckPosition;
+	moveData.m_endPosition = targetPosition;
+	moveData.m_moveTime = 0.5f;
+	moveData.m_sprite = &m_cardSprites[&data.m_card];
+	m_movingSprites[&data.m_card] = moveData;
 
 	m_belote.pauseStateMachine(true);
 }

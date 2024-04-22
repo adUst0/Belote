@@ -7,6 +7,7 @@ int WinMain()
 #endif // DEBUG
 {
 	Application game(1600, 900, "Belote");
+	game.run();
 
 	return 0;
 }

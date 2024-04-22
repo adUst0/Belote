@@ -5,8 +5,10 @@
 #include "StateMachine.h"
 #include "AssetManager.h"
 #include "InputManager.h"
+#include "Observer.h"
 
 class Application
+	: public Subject<NotifyCardDealing>
 {
 public:
 	Application(unsigned int width, unsigned int height, const std::string& title);
@@ -18,8 +20,8 @@ public:
 	AssetManager&					getAssetsManager() { return m_assetManager; }
 	InputManager&					getInputManager() { return m_inputManager; }
 
+	void							run();
 private:
-	void run();
 
 	sf::RenderWindow				m_window;
 

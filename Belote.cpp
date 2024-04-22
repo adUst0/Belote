@@ -318,7 +318,8 @@ void Belote::dealCardsToPlayer(Player& player, int numCards)
 		m_deck.pop_back();
 
 		Utils::log("Dealing card: {} {}\n", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
-		static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->notifyCardDealing(player, *card);
+		//static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->notifyCardDealing(player, *card);
+		static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).notifyObservers(NotifyCardDealing(player, *card));
 	}
 }
 

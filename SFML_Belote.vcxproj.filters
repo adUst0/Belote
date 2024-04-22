@@ -66,6 +66,9 @@
     <ClCompile Include="Utils.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Observer.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="States.h">
@@ -96,6 +99,9 @@
       <Filter>Header Files\Game\AI</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Observer.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>

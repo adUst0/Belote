@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "Card.h"
 #include "Belote.h"
+#include "Observer.h"
 
 using Deck = std::vector<std::unique_ptr<Card>>;
 
@@ -62,7 +63,9 @@ private:
 	static inline const sf::Vector2f s_cardScale{ 0.5f, 0.5f };
 };
 
-class GameState : public BaseState
+class GameState 
+	: public BaseState
+	, public Observer<NotifyCardDealing>
 {
 public:
 	GameState(StateMachine& stateMachine);
@@ -71,7 +74,7 @@ public:
 	virtual void					update(float dtSeconds) override;
 	virtual void					draw() override;
 
-	void							notifyCardDealing(const Player& player, const Card& card);
+	virtual void					notify(const NotifyCardDealing& data) override;
 
 private:
 	struct SpriteMoveData
