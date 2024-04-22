@@ -4,6 +4,7 @@
 #include <vector>
 #include "StateMachine.h"
 #include <array>
+#include "Player.h"
 
 // TODO: Move to separate files 
 
@@ -20,44 +21,6 @@ enum class Contract : int8_t
 	Redouble,
 	Num,
 };
-
-class Belote;
-
-class Player
-{
-public:
-	Player(int teamIndex, int playerIndex, Belote& belote);
-
-	void										addCard(const Card& card) { m_cards.push_back(&card); }
-
-	const std::vector<const Card*>&				getCards() const { return m_cards; }
-	void										returnCards();
-
-	int											getTeamIndex() const { return m_teamIndex; }
-	int											getPlayerIndex() const { return m_playerIndex; }
-
-	bool										isContractVoteRequired() const { return m_contractVoteRequired; }
-	void										setContractVoteRequired();
-
-	bool										isHuman() const { return m_isHuman; }
-
-	const Belote*								getBelote() const { return m_belote; }
-
-private:
-	Belote*										m_belote = nullptr;
-
-	bool										m_isHuman = false;
-
-	int											m_teamIndex = 0;
-	int											m_playerIndex = 0;
-
-	bool										m_contractVoteRequired = false;
-
-	std::vector<const Card*>					m_cards;
-};
-
-
-
 
 class Belote
 {
@@ -102,7 +65,7 @@ public:
 	bool										isValidContractVote(Contract vote) const;
 
 	void										enterState(BeloteState state);
-	void										update();
+	void										updateState();
 
 private:
 
@@ -112,7 +75,7 @@ private:
 	ContractVoteData							getLastNonPassContractVote(bool ignoreDouble = true) const;
 	Contract									decideContractFromVotes() const;
 
-	// Belote States. TODO: This can be implemented using the StateMachine but I believe it would be overkill for now
+	// Belote States. This can be implemented using the StateMachine class but it would be overkill for now
 	void										enterStartNewGameState();
 	void										updateStartNewGameState();
 

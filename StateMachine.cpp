@@ -3,12 +3,12 @@
 #include <SFML/Graphics.hpp>
 #include "Application.h"
 
-StateBase::StateBase(StateMachine& stateMachine)
+BaseState::BaseState(StateMachine& stateMachine)
 	: m_stateMachine(stateMachine)
 {
 }
 
-void StateBase::handleInput()
+void BaseState::handleInput()
 {
 	sf::RenderWindow& window = Application::getInstance()->getWindow();
 
@@ -23,7 +23,7 @@ void StateBase::handleInput()
 	}
 }
 
-void StateMachine::pushState(std::unique_ptr<StateBase> newState, bool isReplacing /*= true*/)
+void StateMachine::pushState(std::unique_ptr<BaseState> newState, bool isReplacing /*= true*/)
 {
 	m_newState = std::move(newState);
 	m_isReplacing = isReplacing;
@@ -68,7 +68,7 @@ void StateMachine::processStateChanges()
 	}
 }
 
-StateBase* StateMachine::getActiveState()
+BaseState* StateMachine::getActiveState()
 {
 	return m_states.empty() ? nullptr : m_states.top().get();
 }

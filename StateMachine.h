@@ -7,15 +7,15 @@
 
 class StateMachine;
 
-class StateBase
+class BaseState
 {
 public:
-	StateBase(StateMachine& stateMachine);
-	virtual ~StateBase() = default;
-	StateBase(const StateBase&) = delete;
-	StateBase(StateBase&&) = delete;
-	StateBase& operator=(const StateBase&) = delete;
-	StateBase& operator=(StateBase&&) = delete;
+	BaseState(StateMachine& stateMachine);
+	virtual ~BaseState() = default;
+	BaseState(const BaseState&) = delete;
+	BaseState(BaseState&&) = delete;
+	BaseState& operator=(const BaseState&) = delete;
+	BaseState& operator=(BaseState&&) = delete;
 
 	virtual void					onEnterState(bool /*isResume*/) {}
 	virtual void					onLeaveState(bool /*isPause*/) {}
@@ -33,17 +33,17 @@ class StateMachine
 public:
 	StateMachine() = default;
 
-	void							pushState(std::unique_ptr<StateBase> newState, bool isReplacing = true);
+	void							pushState(std::unique_ptr<BaseState> newState, bool isReplacing = true);
 	void							popState();
 
 	void							processStateChanges();
 
-	StateBase*						getActiveState();
+	BaseState*						getActiveState();
 
 private:
 
-	std::stack<std::unique_ptr<StateBase>> m_states;
-	std::unique_ptr<StateBase>			m_newState;
+	std::stack<std::unique_ptr<BaseState>> m_states;
+	std::unique_ptr<BaseState>			m_newState;
 
 	bool							m_isRemoving = false;
 	bool							m_isReplacing = false;

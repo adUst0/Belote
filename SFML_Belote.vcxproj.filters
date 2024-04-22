@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{e28f863e-901a-4447-ae51-50f0275e300e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Game\AI">
+      <UniqueIdentifier>{04f74631-714f-42f5-9d95-fdf73084bd35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game\AI">
+      <UniqueIdentifier>{bb495cee-6ab1-4482-af38-89a4e8cb2d14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -51,6 +57,15 @@
     <ClCompile Include="Card.cpp">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="AI.cpp">
+      <Filter>Source Files\Game\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="States.h">
@@ -73,6 +88,15 @@
     </ClInclude>
     <ClInclude Include="Card.h">
       <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="AI.h">
+      <Filter>Header Files\Game\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

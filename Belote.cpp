@@ -4,6 +4,10 @@
 #include <chrono>
 #include <iostream>
 #include <cassert>
+#include "Player.h"
+#include "Utils.h"
+#include "Application.h"
+#include "States.h"
 
 /* TODO Notes:
 * 20 Apr 24, 17.25: done with Belote::isValidContractVote() but not tested
@@ -12,23 +16,6 @@
 
 namespace
 {
-#ifdef DEBUG
-	const bool DEBUG_LOG = true;
-#else
-	const bool DEBUG_LOG = false;
-#endif
-
-	int randRanged(int min, int max) //range : [min, max]
-	{
-		static bool first = true;
-		if (first)
-		{
-			srand((unsigned int)(time(nullptr)));
-			first = false;
-		}
-		return min + rand() % ((max + 1) - min);
-	}
-
 	std::string contractToString(Contract contract)
 	{
 		switch (contract)
@@ -129,87 +116,22 @@ namespace
 		return out;
 	}
 
-	std::string lastLog;
-
-	template <typename... Args>
-	void logMsg(std::string_view format, Args... args)
+	bool isRankAllowedInBelote(Rank rank)
 	{
-		if (!DEBUG_LOG)
+		switch (rank)
 		{
-			return;
+		case Rank::Ace:
+		case Rank::Seven:
+		case Rank::Eight:
+		case Rank::Nine:
+		case Rank::Ten:
+		case Rank::Jack:
+		case Rank::Queen:
+		case Rank::King:
+			return true;
+		default:
+			return false;
 		}
-
-		std::string currentLog = std::format(format, std::forward<Args>(args)...);
-		if (lastLog == currentLog)
-		{
-			return;
-		}
-
-		std::cout << currentLog;
-		lastLog = std::move(currentLog);
-	}
-}
-
-class DummyAI
-{
-public:
-	static Contract chooseContractVote(const Player& player)
-	{
-		Contract contract;
-		do 
-		{
-			contract = Contract(randRanged(0, (int8_t)Contract::Num - 1));
-		} while (!player.getBelote()->isValidContractVote(contract));
-
-		return contract;
-	}
-};
-
-
-Player::Player(int teamIndex, int playerIndex, Belote& belote) 
-	: m_teamIndex(teamIndex)
-	, m_playerIndex(playerIndex)
-	, m_belote(&belote)
-{
-}
-
-void Player::returnCards()
-{
-	while (!m_cards.empty())
-	{
-		m_belote->returnCard(*m_cards.back());
-		m_cards.pop_back();
-	}
-}
-
-void Player::setContractVoteRequired()
-{
-	m_contractVoteRequired = true;
-
-	if (!m_isHuman)
-	{
-		const Contract vote = DummyAI::chooseContractVote(*this);
-		assert(m_belote->isValidContractVote(vote));
-		m_belote->voteForContract(vote);
-		m_contractVoteRequired = false;
-	}
-}
-
-bool isRankAllowed(Rank rank)
-{
-	switch (rank)
-	{
-	case Rank::Ace:
-	case Rank::Seven:
-	case Rank::Eight:
-	case Rank::Nine:
-	case Rank::Ten:
-	case Rank::Jack:
-	case Rank::Queen:
-	case Rank::King:
-		return true;
-	default:
-		return false;
 	}
 }
 
@@ -224,7 +146,7 @@ Belote::Belote()
 		{
 			for (int j = 0; j < (int8_t)Rank::Num; ++j)
 			{
-				if (isRankAllowed(Rank(j)))
+				if (isRankAllowedInBelote(Rank(j)))
 				{
 					s_cards.emplace_back(std::make_unique<Card>(Suit(i), Rank(j)));
 				}
@@ -272,7 +194,7 @@ void Belote::voteForContract(Contract contract)
 {
 	assert(contract != Contract::Num);
 	m_contractVotes.push_back(contract);
-	logMsg("Voting for contract {}\n", contractToString(contract));
+	Utils::log("Voting for contract {}\n", contractToString(contract));
 }
 
 bool Belote::isValidContractVote(Contract vote) const
@@ -317,7 +239,7 @@ bool Belote::isValidContractVote(Contract vote) const
 void Belote::enterState(BeloteState state)
 {
 	m_state = state;
-	logMsg("ENTER {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
+	Utils::log("ENTER {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (state)
 	{
@@ -346,9 +268,9 @@ void Belote::enterState(BeloteState state)
 	}
 }
 
-void Belote::update()
+void Belote::updateState()
 {
-	logMsg("UPDATE {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
+	Utils::log("UPDATE {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (m_state)
 	{
@@ -386,9 +308,12 @@ void Belote::dealCardsToPlayer(Player& player, int numCards)
 {
 	for (int i = 0; i < numCards; ++i)
 	{
-		logMsg("Dealing card: {} {}\n", stringFromRank(m_deck.back()->getRank()), stringFromSuit(m_deck.back()->getSuit()));
-		player.addCard(*m_deck.back());
+		const Card* card = m_deck.back();
+		player.addCard(*card);
 		m_deck.pop_back();
+
+		Utils::log("Dealing card: {} {}\n", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
+		static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->notifyCardDealing(player, *card);
 	}
 }
 
@@ -460,8 +385,8 @@ void Belote::enterDealCardsToActivePlayerState()
 
 void Belote::updateDealCardsToActivePlayerState()
 {
-	const bool cardDealingCompleted = true; // TODO: may change when playing UI animation
-	if (cardDealingCompleted)
+	const bool isCardDealingCompleted = !static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->anySpriteMoving();
+	if (isCardDealingCompleted)
 	{
 		const bool allPlayersHaveTheSameNumberOfCards = getNextPlayer().getCards().size() == getActivePlayer().getCards().size();
 

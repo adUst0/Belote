@@ -13,7 +13,7 @@ Application::Application(unsigned int width, unsigned int height, const std::str
 	m_window.create(sf::VideoMode(width, height), title);
 	m_window.setFramerateLimit(60u);
 
-	m_stateMachine.pushState(std::make_unique<TestBeloteState>(m_stateMachine));
+	m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine));
 
 	run();
 }
