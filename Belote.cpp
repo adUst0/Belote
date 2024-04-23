@@ -7,54 +7,50 @@
 #include "Player.h"
 #include "Utils.h"
 #include "Application.h"
-#include "States.h"
 
-/* TODO Notes:
-* 20 Apr 24, 17.25: done with Belote::isValidContractVote() but not tested
-* 20 Apr 24, 23:14: done with contract voting. Todo: play tricks
-*/
+std::string contractToString(Contract contract)
+{
+	switch (contract)
+	{
+	case Contract::Pass:
+		return "Pass";
+		break;
+	case Contract::Clubs:
+		return "Clubs";
+		break;
+	case Contract::Diamonds:
+		return "Diamonds";
+		break;
+	case Contract::Hearts:
+		return "Hearts";
+		break;
+	case Contract::Spades:
+		return "Spades";
+		break;
+	case Contract::NoTrumps:
+		return "NoTrumps";
+		break;
+	case Contract::AllTrumps:
+		return "AllTrumps";
+		break;
+	case Contract::Double:
+		return "Double";
+		break;
+	case Contract::Redouble:
+		return "Redouble";
+		break;
+	case Contract::Num:
+		return "Num - Invalid";
+		break;
+	default:
+		return "Missing string for Contract";
+		break;
+	}
+}
 
 namespace
 {
-	std::string contractToString(Contract contract)
-	{
-		switch (contract)
-		{
-		case Contract::Pass:
-			return "Pass";
-			break;
-		case Contract::Clubs:
-			return "Clubs";
-			break;
-		case Contract::Diamonds:
-			return "Diamonds";
-			break;
-		case Contract::Hearts:
-			return "Hearts";
-			break;
-		case Contract::Spades:
-			return "Spades";
-			break;
-		case Contract::NoTrumps:
-			return "NoTrumps";
-			break;
-		case Contract::AllTrumps:
-			return "AllTrumps";
-			break;
-		case Contract::Double:
-			return "Double";
-			break;
-		case Contract::Redouble:
-			return "Redouble";
-			break;
-		case Contract::Num:
-			return "Num - Invalid";
-			break;
-		default:
-			return "Missing string for Contract";
-			break;
-		}
-	}
+	
 
 	std::string beloteStateToString(Belote::BeloteState state)
 	{
@@ -195,6 +191,7 @@ void Belote::voteForContract(Contract contract)
 	assert(contract != Contract::Num);
 	m_contractVotes.push_back(contract);
 	Utils::log("Voting for contract {}\n", contractToString(contract));
+	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).notifyObservers(NotifyContractVote(getActivePlayer(), contract));
 }
 
 bool Belote::isValidContractVote(Contract vote) const
@@ -318,7 +315,6 @@ void Belote::dealCardsToPlayer(Player& player, int numCards)
 		m_deck.pop_back();
 
 		Utils::log("Dealing card: {} {}\n", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
-		//static_cast<GameState*>(Application::getInstance()->getStateMachine().getActiveState())->notifyCardDealing(player, *card);
 		static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).notifyObservers(NotifyCardDealing(player, *card));
 	}
 }

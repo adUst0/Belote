@@ -27,8 +27,8 @@ class Subject
 public:
 	virtual ~Subject();
 
-	void addObserver(Observer<Data>& observer);
-	void removeObserver(Observer<Data>& observer);
+	void registerObserver(Observer<Data>& observer);
+	void unregisterObserver(Observer<Data>& observer);
 	void notifyObservers(const Data& data);
 
 private:
@@ -45,14 +45,14 @@ Observer<Data>::~Observer<Data>()
 }
 
 template <typename Data>
-void Subject<Data>::addObserver(Observer<Data>& observer)
+void Subject<Data>::registerObserver(Observer<Data>& observer)
 {
 	Utils::emplace_back_unique(m_observers, &observer);
 	Utils::emplace_back_unique(observer.m_subjects, this);
 }
 
 template <typename Data>
-void Subject<Data>::removeObserver(Observer<Data>& observer)
+void Subject<Data>::unregisterObserver(Observer<Data>& observer)
 {
 	std::erase(m_observers, &observer);
 }
@@ -74,10 +74,3 @@ Subject<Data>::~Subject<Data>()
 		std::erase(observer->m_subjects, this);
 	}
 }
-
-// TODO: move to another file
-struct NotifyCardDealing
-{
-	const Player& m_player;
-	const Card& m_card;
-};

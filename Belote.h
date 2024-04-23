@@ -22,6 +22,8 @@ enum class Contract : int8_t
 	Num,
 };
 
+std::string contractToString(Contract contract);
+
 class Belote
 {
 public:

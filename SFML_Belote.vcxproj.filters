@@ -31,12 +31,15 @@
     <Filter Include="Header Files\Game\AI">
       <UniqueIdentifier>{bb495cee-6ab1-4482-af38-89a4e8cb2d14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\States">
+      <UniqueIdentifier>{8c2ebfee-9ff8-40fe-ab9e-257510e32051}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\States">
+      <UniqueIdentifier>{46ee9184-109b-4c2f-8f59-fc186dc89d65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="States.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AssetManager.cpp">
@@ -69,11 +72,14 @@
     <ClCompile Include="Observer.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="GameState.cpp">
+      <Filter>Source Files\States</Filter>
+    </ClCompile>
+    <ClCompile Include="SplashState.cpp">
+      <Filter>Source Files\States</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="States.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AssetManager.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
@@ -103,6 +109,15 @@
     </ClInclude>
     <ClInclude Include="Observer.h">
       <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GameState.h">
+      <Filter>Header Files\States</Filter>
+    </ClInclude>
+    <ClInclude Include="SplashState.h">
+      <Filter>Header Files\States</Filter>
+    </ClInclude>
+    <ClInclude Include="ObserverMessages.h">
+      <Filter>Header Files\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -6,9 +6,11 @@
 #include "AssetManager.h"
 #include "InputManager.h"
 #include "Observer.h"
+#include "ObserverMessages.h"
 
 class Application
 	: public Subject<NotifyCardDealing>
+	, public Subject<NotifyContractVote>
 {
 public:
 	Application(unsigned int width, unsigned int height, const std::string& title);

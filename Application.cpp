@@ -1,7 +1,7 @@
 #include "Application.h"
 #include <string>
-#include "States.h"
 #include <cassert>
+#include "SplashState.h"
 
 Application* Application::s_instance = nullptr;
 
@@ -16,7 +16,8 @@ Application::Application(unsigned int width, unsigned int height, const std::str
 
 void Application::run()
 {
-	m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine));
+	//m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine));
+	m_stateMachine.pushState(std::make_unique<SplashState>(m_stateMachine));
 
 	sf::Clock clock;
 
