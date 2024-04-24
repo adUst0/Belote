@@ -58,12 +58,11 @@ public:
 	const Player&								getActivePlayer() const { return *m_players[m_activePlayerIndex]; }
 	Player&										getActivePlayer() { return *m_players[m_activePlayerIndex]; }
 
-	size_t										getNextPlayerIndex(size_t current = -1/*default is active player*/) const;  // counter-clockwise
-	size_t										getPreviousPlayerIndex(size_t current = -1/*default is active player*/) const; // clockwise
+	size_t										getNextPlayerIndex(size_t current = -1/*default is active player*/) const;
+	size_t										getPreviousPlayerIndex(size_t current = -1/*default is active player*/) const;
 	
 	const Player&								getNextPlayer() const { return *m_players[getNextPlayerIndex()]; }
 	Player&										getNextPlayer() { return *m_players[getNextPlayerIndex()]; }
-
 
 	const std::vector<Contract>&				getContractVotes() const { return m_contractVotes; }
 	void										voteForContract(Contract contract);
@@ -111,7 +110,7 @@ private:
 
 	std::vector<const Card*>					m_currentTrickCards;
 
-	size_t										m_firstPlayerIndex = 0;
+	size_t										m_dealingPlayerIndex = 0;
 	size_t										m_activePlayerIndex = 0;
 
 

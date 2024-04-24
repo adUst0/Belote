@@ -7,6 +7,8 @@
 #include "Observer.h"
 #include "ObserverMessages.h"
 
+class UIComponent;
+
 class GameState
 	: public BaseState
 	, public Observer<NotifyCardDealing>
@@ -28,6 +30,18 @@ public:
 	void							togglePause();
 
 private:
+
+	/*
+	* UIComponent
+	*	setPosition - m_position
+	*	setVisible - m_visible
+	*	animation
+	*	draw() override
+	
+	* UITextComponent
+	* 
+	*/
+
 	struct SpriteMoveData
 	{
 		sf::Vector2f m_startPosition;
@@ -44,20 +58,13 @@ private:
 		bool m_deleteOnExpiration = false;
 	};
 
-	struct PlayerPosition
-	{
-		sf::Vector2f m_position;
-		bool m_isHorizontallyCentered = false;
-		bool m_isReversedDirection = false;
-	};
-
 	void											createCardSprites();
 	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder) const;
-	sf::Vector2f									calculateCardPositionOnTable(const Player& player) const;
+	sf::Vector2f									getCardPositionOnTable(const Player& player) const;
+
+	std::string										getPlayerName(const Player& player) const;
 
 	Belote											m_belote;
-
-	sf::Vector2f									m_cardSize;
 
 	sf::Sprite										m_cardBack;
 
@@ -65,18 +72,15 @@ private:
 	std::unordered_map<const Card*, sf::Sprite>		m_cardSprites;
 	std::unordered_map<std::string, std::unique_ptr<TextData>>	m_texts;
 
+	std::unordered_map<std::string, std::unique_ptr<UIComponent>> m_uiComponents;
+
 	std::unordered_map<const Card*, SpriteMoveData> m_movingSprites;
 
-	sf::Vector2f									m_deckPosition;
-	std::vector<PlayerPosition>						m_playerPositions;
+	
 
 	sf::Sprite										m_background;
 
 	float											m_delayGameSeconds = 0.f;
 	bool											m_shouldPauseGame = false;
-
-
-	static inline const sf::Vector2f				s_cardScale{ 0.5f, 0.5f };
-	static inline const float						s_borderOffset = 20.f;
 };
 

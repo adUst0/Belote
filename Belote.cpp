@@ -229,7 +229,7 @@ size_t Belote::getNextPlayerIndex(size_t current /*= -1/*default is active playe
 		current = m_activePlayerIndex;
 	}
 
-	return current == 0 ? m_players.size() - 1 : current - 1; // counter-clockwise
+	return current == m_players.size() - 1 ? 0 : current + 1;
 }
 
 size_t Belote::getPreviousPlayerIndex(size_t current /*= -1/*default is active player*/) const
@@ -239,7 +239,7 @@ size_t Belote::getPreviousPlayerIndex(size_t current /*= -1/*default is active p
 		current = m_activePlayerIndex;
 	}
 
-	return current == m_players.size() - 1 ? 0 : current + 1;
+	return current == 0 ? m_players.size() - 1 : current - 1;
 }
 
 void Belote::voteForContract(Contract contract)
@@ -482,6 +482,7 @@ void Belote::enterStartNewGameState()
 
 void Belote::updateStartNewGameState()
 {
+	m_dealingPlayerIndex = getPreviousPlayerIndex(m_activePlayerIndex);
 	enterState(BeloteState::DealCardsToActivePlayer);
 }
 
@@ -501,6 +502,7 @@ void Belote::updateDealCardsToActivePlayerState()
 	{
 		if (getActivePlayer().getCards().size() == 3)
 		{
+			m_activePlayerIndex = getNextPlayerIndex();
 			enterState(BeloteState::DealCardsToActivePlayer); // deal the rest 2 cards of the initial hand
 		}
 		else if (getActivePlayer().getCards().size() == 5)
@@ -508,10 +510,12 @@ void Belote::updateDealCardsToActivePlayerState()
 			m_contract = Contract::Num;
 			m_contractVotes.clear();
 
+			m_activePlayerIndex = getNextPlayerIndex();
 			enterState(BeloteState::ChooseContract);
 		}
 		else
 		{
+			m_activePlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
 			enterState(BeloteState::PlayCard);
 		}
 	}
