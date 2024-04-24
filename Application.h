@@ -11,6 +11,7 @@
 class Application
 	: public Subject<NotifyCardDealing>
 	, public Subject<NotifyContractVote>
+	, public Subject<NotifyCardAboutToBePlayed>
 {
 public:
 	Application(unsigned int width, unsigned int height, const std::string& title);

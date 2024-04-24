@@ -1,6 +1,12 @@
 #include "GameState.h"
 #include "Application.h"
 
+namespace
+{
+	const float WAIT_TIME_AFTER_BIDDING = 0.5f;
+	const float WAIT_TIME_AFTER_PLAYING = 1.f;
+}
+
 GameState::GameState(StateMachine& stateMachine)
 	: BaseState(stateMachine)
 {
@@ -42,6 +48,7 @@ GameState::GameState(StateMachine& stateMachine)
 
 	static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).registerObserver(*this);
 }
 
 void GameState::createCardSprites()
@@ -79,6 +86,20 @@ sf::Vector2f GameState::calculateCardPosition(const Player& player, int cardOrde
 
 	float positionY = m_playerPositions[player.getPlayerIndex()].m_position.y;
 	return { positionX, positionY };
+}
+
+sf::Vector2f GameState::calculateCardPositionOnTable(const Player& player) const
+{
+	const float offset = 100.f;
+
+	static const sf::Vector2f cardPositions[4]{
+		{800.f - offset, 450.f}, // left
+		{800.f, 450.f + offset}, // top
+		{800.f + offset, 450.f}, // right
+		{800.f, 450.f - offset}, // bottom
+	};
+
+	return cardPositions[player.getPlayerIndex()];
 }
 
 void GameState::handleInput()
@@ -126,7 +147,7 @@ void GameState::update(float dtSeconds)
 	std::erase_if(m_texts, [](const auto& item)
 	{
 		auto const& [key, value] = item;
-		return value->m_timeLeft == 0.f;
+		return value->m_timeLeft == 0.f && value->m_deleteOnExpiration;
 	});
 
 	if (m_delayGameSeconds > 0.f)
@@ -159,19 +180,13 @@ void GameState::draw()
 		{
 			const Card* card = m_belote.getPlayers()[i]->getCards()[j];
 
-			sf::Vector2f position;
-			auto moveData = m_movingSprites.find(card);
-			if (moveData != m_movingSprites.end())
+			if (m_movingSprites.find(card) != m_movingSprites.end())
 			{
-				const float elapsed = std::min(moveData->second.m_elapsedTimeSeconds / moveData->second.m_moveTime, 1.f);
-				const float x = std::lerp(moveData->second.m_startPosition.x, moveData->second.m_endPosition.x, elapsed);
-				const float y = std::lerp(moveData->second.m_startPosition.y, moveData->second.m_endPosition.y, elapsed);
-				position = { x, y };
+				continue;
+				
 			}
-			else
-			{
-				position = calculateCardPosition(*m_belote.getPlayers()[i], j);
-			}
+
+			sf::Vector2f position = calculateCardPosition(*m_belote.getPlayers()[i], j);
 
 			sf::Sprite& sprite = m_cardSprites[card];
 			sprite.setPosition(position);
@@ -182,9 +197,49 @@ void GameState::draw()
 		}
 	}
 
+	for (int i = m_belote.getCurrentTrickCards().size() - 1; i >= 0; --i)
+	{
+		const Card* card = m_belote.getCurrentTrickCards()[i];
+		if (m_movingSprites.find(card) != m_movingSprites.end())
+		{
+			continue;
+		}
+
+		size_t playerIndex = m_belote.getActivePlayerIndex();
+		for (size_t j = i; j < m_belote.getCurrentTrickCards().size() - 1; ++j)
+		{
+			playerIndex = m_belote.getPreviousPlayerIndex(playerIndex);
+		}
+
+		const sf::Vector2f position = calculateCardPositionOnTable(*m_belote.getPlayers()[playerIndex]);
+		sf::Sprite& sprite = m_cardSprites[card];
+		sprite.setPosition(position);
+		m_cardBackground.setPosition(position);
+
+		window.draw(m_cardBackground);
+		window.draw(sprite);
+	}
+
+	for (auto& [card, moveData] : m_movingSprites)
+	{
+		const float elapsed = std::min(moveData.m_elapsedTimeSeconds / moveData.m_moveTime, 1.f);
+		const float x = std::lerp(moveData.m_startPosition.x, moveData.m_endPosition.x, elapsed);
+		const float y = std::lerp(moveData.m_startPosition.y, moveData.m_endPosition.y, elapsed);
+		sf::Vector2f position{ x, y };
+
+		moveData.m_sprite->setPosition(position);
+		m_cardBackground.setPosition(position);
+
+		window.draw(m_cardBackground);
+		window.draw(*moveData.m_sprite);
+	}
+
 	for (auto& [key, textData] : m_texts)
 	{
-		window.draw(textData->m_text);
+		if (textData->m_timeLeft != 0.f)
+		{
+			window.draw(textData->m_text);
+		}
 	}
 
 	window.display();
@@ -231,7 +286,24 @@ void GameState::notify(const NotifyContractVote& data)
 		textData.m_timeLeft = -1.f; // infinite
 	}
 
-	delayGame(1.f); // TODO: MOVE into variable
+
+
+	delayGame(WAIT_TIME_AFTER_BIDDING);
+}
+
+void GameState::notify(const NotifyCardAboutToBePlayed& data)
+{
+	sf::Sprite& sprite = m_cardSprites[&data.m_card];
+
+	SpriteMoveData moveData;
+	moveData.m_startPosition = sprite.getPosition();
+	moveData.m_endPosition = calculateCardPositionOnTable(data.m_player);
+	moveData.m_moveTime = 0.5f;
+	moveData.m_sprite = &sprite;
+	m_movingSprites[&data.m_card] = moveData;
+
+	m_belote.pauseStateMachine(true);
+	delayGame(WAIT_TIME_AFTER_PLAYING);
 }
 
 void GameState::delayGame(float seconds)
@@ -243,20 +315,18 @@ void GameState::togglePause()
 {
 	m_shouldPauseGame = !m_shouldPauseGame;
 
-	if (!m_shouldPauseGame)
+	if (!m_texts.contains("pause")) // C++20
 	{
-		m_texts.erase("pause"); // TODO: I don't like this being deleted and created every time. TextData should be reworked
-		return;
+		TextData textData;
+		textData.m_text.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
+		textData.m_text.setCharacterSize(72);
+		textData.m_text.setFillColor(sf::Color::Red);
+		textData.m_text.setString("GAME PAUSED!");
+		textData.m_text.setPosition(m_deckPosition);
+		//center
+		textData.m_text.setOrigin({ textData.m_text.getGlobalBounds().width / 2.f + textData.m_text.getLocalBounds().left, textData.m_text.getGlobalBounds().height / 2.f + textData.m_text.getLocalBounds().top });
+		m_texts["pause"] = std::make_unique<TextData>(std::move(textData));
 	}
 
-	TextData textData;
-	textData.m_text.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
-	textData.m_text.setCharacterSize(72);
-	textData.m_text.setFillColor(sf::Color::Red);
-	textData.m_text.setString("GAME PAUSED!");
-	textData.m_text.setPosition(m_deckPosition);
-	//center
-	textData.m_text.setOrigin({ textData.m_text.getGlobalBounds().width / 2.f + textData.m_text.getLocalBounds().left, textData.m_text.getGlobalBounds().height / 2.f + textData.m_text.getLocalBounds().top });
-	textData.m_timeLeft = -1.f; // infinite
-	m_texts["pause"] = std::make_unique<TextData>(std::move(textData));
+	m_texts["pause"]->m_timeLeft = m_shouldPauseGame ? -1.f : 0.f;
 }

@@ -8,6 +8,34 @@
 #include "Utils.h"
 #include "Application.h"
 
+bool isTrumpSuit(Suit suit, Contract currentContract)
+{
+	switch (currentContract)
+	{
+	case Contract::Clubs:
+		return suit == Suit::Clubs;
+		break;
+	case Contract::Diamonds:
+		return suit == Suit::Diamonds;
+		break;
+	case Contract::Hearts:
+		return suit == Suit::Hearts;
+		break;
+	case Contract::Spades:
+		return suit == Suit::Spades;
+		break;
+	case Contract::NoTrumps:
+		return false;
+		break;
+	case Contract::AllTrumps:
+		return true;
+		break;
+	default:
+		return false;
+		break;
+	}
+}
+
 std::string contractToString(Contract contract)
 {
 	switch (contract)
@@ -50,8 +78,6 @@ std::string contractToString(Contract contract)
 
 namespace
 {
-	
-
 	std::string beloteStateToString(Belote::BeloteState state)
 	{
 		switch (state)
@@ -62,7 +88,7 @@ namespace
 			return "DealCardsToActivePlayer";
 		case Belote::BeloteState::ChooseContract:
 			return "ChooseContract";
-		case Belote::BeloteState::PlayTrick:
+		case Belote::BeloteState::PlayCard:
 			return "PlayTrick";
 		case Belote::BeloteState::CollectTrickCardsAndUpdate:
 			return "CollectTrickCardsAndUpdate";
@@ -90,7 +116,7 @@ namespace
 		case Belote::BeloteState::ChooseContract:
 			out << "ChooseContract";
 			break;
-		case Belote::BeloteState::PlayTrick:
+		case Belote::BeloteState::PlayCard:
 			out << "PlayTrick";
 			break;
 		case Belote::BeloteState::CollectTrickCardsAndUpdate:
@@ -128,6 +154,36 @@ namespace
 		default:
 			return false;
 		}
+	}
+
+	int trumpRankCompare(Rank lhs, Rank rhs)
+	{
+		static const std::vector<Rank> order { Rank::Seven, Rank::Eight, Rank::Queen, Rank::King, Rank::Ten, Rank::Ace, Rank::Nine, Rank::Jack };
+
+		if (lhs == rhs)
+		{
+			return 0;
+		}
+
+		const int lhsIndex = std::distance(order.begin(), std::find(order.begin(), order.end(), lhs));
+		const int rhsIndex = std::distance(order.begin(), std::find(order.begin(), order.end(), rhs));
+
+		return lhsIndex < rhsIndex ? -1 : 1;
+	}
+
+	int noTrumpRankCompare(Rank lhs, Rank rhs)
+	{
+		static const std::vector<Rank> order{ Rank::Seven, Rank::Eight, Rank::Nine, Rank::Jack, Rank::Queen, Rank::King, Rank::Ten, Rank::Ace, };
+
+		if (lhs == rhs)
+		{
+			return 0;
+		}
+
+		const int lhsIndex = std::distance(order.begin(), std::find(order.begin(), order.end(), lhs));
+		const int rhsIndex = std::distance(order.begin(), std::find(order.begin(), order.end(), rhs));
+
+		return lhsIndex < rhsIndex ? -1 : 1;
 	}
 }
 
@@ -233,6 +289,58 @@ bool Belote::isValidContractVote(Contract vote) const
 	return (int8_t)vote > (int8_t)current.m_vote;
 }
 
+bool Belote::isValidCardToPlay(const Card& card) const
+{
+	if (m_currentTrickCards.empty())
+	{
+		return true;
+	}
+
+	const Suit suit = m_currentTrickCards[0]->getSuit();
+	const bool isTrump = isTrumpSuit(suit, m_contract);
+
+	if (suit == card.getSuit())
+	{
+		if (isTrump)
+		{
+			return trumpRankCompare(card.getRank(), m_currentTrickCards[0]->getRank()) == 1;
+		}
+
+		return true;
+	}
+
+	const bool hasPlayerACardFromSuit = std::any_of(getActivePlayer().getCards().begin(), getActivePlayer().getCards().end(), [suit](const Card* card) { return card->getSuit() == suit; });
+	if (hasPlayerACardFromSuit)
+	{
+		return false;
+	}
+
+	// player doesn't have the same suit
+	if (!isTrump && isTrumpSuit(card.getSuit(), m_contract))
+	{
+		Rank highestTrumpRankPlayed = Rank::Num;
+		for (int i = 0; i < m_currentTrickCards.size(); ++i)
+		{
+
+			if (highestTrumpRankPlayed == Rank::Num ||
+				m_currentTrickCards[i]->getSuit() == card.getSuit() && trumpRankCompare(m_currentTrickCards[i]->getRank(), highestTrumpRankPlayed) == 1)
+			{
+				highestTrumpRankPlayed = m_currentTrickCards[i]->getRank();
+			}
+		}
+
+		return highestTrumpRankPlayed == Rank::Num || trumpRankCompare(card.getRank(), highestTrumpRankPlayed) == 1;
+	}
+
+	return false;
+}
+
+void Belote::playCard(const Card& card)
+{
+	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).notifyObservers(NotifyCardAboutToBePlayed(getActivePlayer(), card));
+	m_currentTrickCards.push_back(&card);
+}
+
 void Belote::enterState(BeloteState state)
 {
 	m_state = state;
@@ -249,10 +357,11 @@ void Belote::enterState(BeloteState state)
 	case Belote::BeloteState::ChooseContract:
 		enterChooseContractState();
 		break;
-	case Belote::BeloteState::PlayTrick:
-		enterPlayTrickPhase();
+	case Belote::BeloteState::PlayCard:
+		enterPlayCardPhase();
 		break;
 	case Belote::BeloteState::CollectTrickCardsAndUpdate:
+		enterCollectTrickCardsAndUpdate();
 		break;
 	case Belote::BeloteState::CalculateEndOfRoundScore:
 		break;
@@ -285,10 +394,11 @@ void Belote::updateState()
 	case Belote::BeloteState::ChooseContract:
 		updateChooseContractState();
 		break;
-	case Belote::BeloteState::PlayTrick:
-		updatePlayTrickPhase();
+	case Belote::BeloteState::PlayCard:
+		updatePlayCardPhase();
 		break;
 	case Belote::BeloteState::CollectTrickCardsAndUpdate:
+		updateCollectTrickCardsAndUpdate();
 		break;
 	case Belote::BeloteState::CalculateEndOfRoundScore:
 		break;
@@ -402,7 +512,7 @@ void Belote::updateDealCardsToActivePlayerState()
 		}
 		else
 		{
-			enterState(BeloteState::PlayTrick);
+			enterState(BeloteState::PlayCard);
 		}
 	}
 	else
@@ -450,17 +560,44 @@ void Belote::updateChooseContractState()
 	}
 }
 
-void Belote::enterPlayTrickPhase()
+void Belote::enterPlayCardPhase()
+{
+	getActivePlayer().setPlayCardRequired();
+}
+
+void Belote::updatePlayCardPhase()
+{
+	const bool isActivePlayerReady = !getActivePlayer().isPlayCardRequired();
+	if (!isActivePlayerReady)
+	{
+		// Still waiting
+		return;
+	}
+
+	if (m_currentTrickCards.size() == 4)
+	{
+		// Go back to the original first player
+		m_activePlayerIndex = getNextPlayerIndex();
+
+		enterState(BeloteState::CollectTrickCardsAndUpdate);
+	}
+	else
+	{
+		m_activePlayerIndex = getNextPlayerIndex();
+		enterState(BeloteState::PlayCard);
+	}
+}
+
+
+void Belote::enterCollectTrickCardsAndUpdate()
+{
+	m_currentTrickCards.clear(); // TODO: cards have to be moved somewhere
+}
+
+void Belote::updateCollectTrickCardsAndUpdate()
 {
 
 }
-
-void Belote::updatePlayTrickPhase()
-{
-
-}
-
-
 
 /*
 * 1. DEAL state:

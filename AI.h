@@ -5,5 +5,6 @@ class DummyAI
 {
 public:
 	static Contract chooseContractVote(const Player& player);
+	static const Card* chooseCardToPlay(const Player& player);
 };
 

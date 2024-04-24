@@ -1,6 +1,4 @@
 #pragma once
-//#include "Player.h"
-//#include "Card.h"
 
 class Player;
 class Card;
@@ -16,5 +14,11 @@ struct NotifyContractVote
 {
 	const Player& m_player;
 	const Contract& m_contract;
+};
+
+struct NotifyCardAboutToBePlayed
+{
+	const Player& m_player;
+	const Card& m_card;
 };
 

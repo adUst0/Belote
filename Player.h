@@ -20,6 +20,9 @@ public:
 	bool										isContractVoteRequired() const { return m_contractVoteRequired; }
 	void										setContractVoteRequired();
 
+	bool										isPlayCardRequired() const { return m_playCardRequired; }
+	void										setPlayCardRequired();
+
 	bool										isHuman() const { return m_isHuman; }
 
 	const Belote*								getBelote() const { return m_belote; }
@@ -33,6 +36,7 @@ private:
 	int											m_playerIndex = 0;
 
 	bool										m_contractVoteRequired = false;
+	bool										m_playCardRequired = false;
 
 	std::vector<const Card*>					m_cards;
 };

@@ -6,8 +6,9 @@
 #include <array>
 #include "Player.h"
 
-// TODO: Move to separate files 
+// TODO: Implement card ownership with unique_ptr to enforce that the card really transfers ownership
 
+// TODO: Contract can go into a class
 enum class Contract : int8_t
 {
 	Pass = 0,
@@ -22,6 +23,8 @@ enum class Contract : int8_t
 	Num,
 };
 
+bool isTrumpSuit(Suit suit, Contract currentContract);
+
 std::string contractToString(Contract contract);
 
 class Belote
@@ -34,7 +37,7 @@ public:
 		StartNewGame = 0,
 		DealCardsToActivePlayer,
 		ChooseContract,
-		PlayTrick, // One trick consists of all players playing a card
+		PlayCard, // One trick consists of all players playing a card
 		CollectTrickCardsAndUpdate,
 		CalculateEndOfRoundScore, // One round consists of 8 tricks
 		GameOver,
@@ -49,7 +52,7 @@ public:
 
 	const std::vector<std::unique_ptr<Player>>& getPlayers() const { return m_players; }
 	const std::vector<const Card*>&				getDeck() const { return m_deck;}
-	void										returnCard(const Card& card) { m_deck.push_back(&card); }
+	void										returnCardToDeck(const Card& card) { m_deck.push_back(&card); }
 
 	size_t										getActivePlayerIndex() const { return m_activePlayerIndex; }
 	const Player&								getActivePlayer() const { return *m_players[m_activePlayerIndex]; }
@@ -65,6 +68,11 @@ public:
 	const std::vector<Contract>&				getContractVotes() const { return m_contractVotes; }
 	void										voteForContract(Contract contract);
 	bool										isValidContractVote(Contract vote) const;
+
+	bool										isValidCardToPlay(const Card& card) const;
+	void										playCard(const Card& card);
+
+	const std::vector<const Card*>&				getCurrentTrickCards() const { return m_currentTrickCards; }
 
 	void										enterState(BeloteState state);
 	void										updateState();
@@ -89,14 +97,19 @@ private:
 	void										enterChooseContractState();
 	void										updateChooseContractState();
 
-	void										enterPlayTrickPhase();
-	void										updatePlayTrickPhase();
+	void										enterPlayCardPhase();
+	void										updatePlayCardPhase();
+
+	void										enterCollectTrickCardsAndUpdate();
+	void										updateCollectTrickCardsAndUpdate();
 
 	BeloteState									m_state = BeloteState::GameOver;
 
 
 	std::vector<const Card*>					m_deck;
 	std::vector<std::unique_ptr<Player>>		m_players;
+
+	std::vector<const Card*>					m_currentTrickCards;
 
 	size_t										m_firstPlayerIndex = 0;
 	size_t										m_activePlayerIndex = 0;

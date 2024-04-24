@@ -11,6 +11,7 @@ class GameState
 	: public BaseState
 	, public Observer<NotifyCardDealing>
 	, public Observer<NotifyContractVote>
+	, public Observer<NotifyCardAboutToBePlayed>
 {
 public:
 	GameState(StateMachine& stateMachine);
@@ -21,6 +22,7 @@ public:
 
 	virtual void					notify(const NotifyCardDealing& data) override;
 	virtual void					notify(const NotifyContractVote& data) override;
+	virtual void					notify(const NotifyCardAboutToBePlayed& data) override;
 
 	void							delayGame(float seconds);
 	void							togglePause();
@@ -39,6 +41,7 @@ private:
 	{
 		sf::Text m_text;
 		float m_timeLeft = -1.f;
+		bool m_deleteOnExpiration = false;
 	};
 
 	struct PlayerPosition
@@ -50,6 +53,7 @@ private:
 
 	void											createCardSprites();
 	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder) const;
+	sf::Vector2f									calculateCardPositionOnTable(const Player& player) const;
 
 	Belote											m_belote;
 
