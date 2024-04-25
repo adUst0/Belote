@@ -1,6 +1,12 @@
 #include "UIComponent.h"
 #include "Application.h"
 
+UIComponent::UIComponent(const std::string& key)
+	: m_key(key)
+{
+
+}
+
 void UIComponent::addSprite(const std::string& texturePath, float scale)
 {
 	Application::getInstance()->getAssetsManager().loadTexture(texturePath, texturePath);
@@ -56,9 +62,32 @@ void UIComponent::setPosition(const sf::Vector2f& position)
 	}
 }
 
+void UIComponent::moveToPosition(const sf::Vector2f& targetPosition, float animationTime /*= 0.5f*/)
+{
+	m_moveAnimation = std::make_unique<MoveAnimation>(m_position, targetPosition, animationTime);
+}
+
+void UIComponent::onUpdate(float deltaTimeSeconds)
+{
+	if (m_moveAnimation)
+	{
+		m_moveAnimation->m_elapsedTimeSeconds += deltaTimeSeconds;
+
+		const float elapsed = std::min(m_moveAnimation->m_elapsedTimeSeconds / m_moveAnimation->m_animationTimeSeconds, 1.f);
+		const float x = std::lerp(m_moveAnimation->m_startPosition.x, m_moveAnimation->m_endPosition.x, elapsed);
+		const float y = std::lerp(m_moveAnimation->m_startPosition.y, m_moveAnimation->m_endPosition.y, elapsed);
+		setPosition({ x, y });
+
+		if (elapsed == 1.f)
+		{
+			m_moveAnimation.reset();
+		}
+	}
+}
+
 void UIComponent::draw(sf::RenderTarget& target, sf::RenderStates /*states*/) const
 {
-	if (m_text.getString().isEmpty() && m_sprites.empty())
+	if (!m_isVisible || m_text.getString().isEmpty() && m_sprites.empty())
 	{
 		return;
 	}

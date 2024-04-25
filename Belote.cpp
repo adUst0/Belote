@@ -376,11 +376,6 @@ void Belote::enterState(BeloteState state)
 
 void Belote::updateState()
 {
-	if (m_isStateMachinePaused)
-	{
-		return;
-	}
-
 	Utils::log("UPDATE {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (m_state)
@@ -424,7 +419,7 @@ void Belote::dealCardsToPlayer(Player& player, int numCards)
 		player.addCard(*card);
 		m_deck.pop_back();
 
-		Utils::log("Dealing card: {} {}\n", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
+		Utils::log("Dealing card: {}\n", card->toString());
 		static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).notifyObservers(NotifyCardDealing(player, *card));
 	}
 }

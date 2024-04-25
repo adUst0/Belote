@@ -40,41 +40,27 @@ namespace
 
 	const sf::Vector2f					DECK_POSITION = SCREEN_CENTER;
 
-	static const sf::Vector2f			CARD_POSITION_ON_TABLE[4] { // Current trick cards
+	static const sf::Vector2f			CARD_POSITIONS_ON_TABLE[4] { // Current trick cards
 		{SCREEN_CENTER.x - CARD_WIDTH, SCREEN_CENTER.y}, // left
 		{SCREEN_CENTER.x, SCREEN_CENTER.y + CARD_HEIGHT}, // top
 		{SCREEN_CENTER.x + CARD_WIDTH, SCREEN_CENTER.y}, // right
 		{SCREEN_CENTER.x, SCREEN_CENTER.y - CARD_HEIGHT}, // bottom
 	};
-
-
 }
 
 GameState::GameState(StateMachine& stateMachine)
 	: BaseState(stateMachine)
 {
+	auto& background = m_uiComponents.emplace_back(std::make_unique<UIComponent>("background"));
+	background->addSprite("assets/background.jpg");
+
 	createCardSprites();
+	createPlayerNames();
 
-	Application::getInstance()->getAssetsManager().loadTexture("assets/background.jpg", "assets/background.jpg");
-	m_background.setTexture(Application::getInstance()->getAssetsManager().getTexture("assets/background.jpg"), true);
-
-	for (const auto& player_ptr : m_belote.getPlayers())
-	{
-	//	TextData textData;
-	//	const std::string playerText = std::format("Player {} ({})", player_ptr->getPlayerIndex(), player_ptr->isHuman() ? "human" : "AI");
-	//	textData.m_text.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
-	//	textData.m_text.setCharacterSize(36);
-	//	textData.m_text.setFillColor(sf::Color::Black);
-	//	textData.m_text.setString(playerText);
-	//	textData.m_text.setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
-	//	textData.m_timeLeft = -1.f; // infinite
-	//	m_texts[playerText] = std::make_unique<TextData>(std::move(textData));
-		std::unique_ptr<UIComponent>& component = m_uiComponents[std::format("player_{}", player_ptr->getPlayerIndex())];
-		component = std::make_unique<UIComponent>();
-		component->setText(getPlayerName(*player_ptr));
-		component->setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
-	}
-	
+	auto& pauseText = m_uiComponents.emplace_back(std::make_unique<UIComponent>("pause"));
+	pauseText->setText("GAME PAUSED!", sf::Color::Red, 72, true);
+	pauseText->setVisible(m_shouldPauseGame);
+	pauseText->setPosition(DECK_POSITION);
 
 	static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).registerObserver(*this);
@@ -85,21 +71,30 @@ void GameState::createCardSprites()
 {
 	for (const Card* card : m_belote.getDeck())
 	{
-		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
-		Application::getInstance()->getAssetsManager().loadTexture(path, path);
+		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(card->toString()));
 
-		const sf::Texture& texture = Application::getInstance()->getAssetsManager().getTexture(path);
-		sf::Sprite sprite(texture);
-		sprite.setScale(CARD_SCALE);
-		m_cardSprites[card] = sprite;
+		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
+		component->addSprite(path, CARD_SCALE.x);
+		component->setBackground(sf::Color::White);
+		component->setPosition(DECK_POSITION);
+		component->setVisible(false);
+
+		Application::getInstance()->getAssetsManager().loadTexture(path, path);
 	}
 
-	m_cardBackground.setSize({ CARD_WIDTH, CARD_HEIGHT });
-	m_cardBackground.setFillColor(sf::Color::White);
+	std::unique_ptr<UIComponent>& card_back = m_uiComponents.emplace_back(std::make_unique<UIComponent>("card_back"));
+	card_back->addSprite("assets/card_back.png", CARD_SCALE.x);
+	card_back->setPosition(DECK_POSITION);
+}
 
-	Application::getInstance()->getAssetsManager().loadTexture("assets/card_back.png", "assets/card_back.png");
-	m_cardBack = sf::Sprite(Application::getInstance()->getAssetsManager().getTexture("assets/card_back.png"));
-	m_cardBack.setScale(CARD_SCALE);
+void GameState::createPlayerNames()
+{
+	for (const auto& player_ptr : m_belote.getPlayers())
+	{
+		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(std::format("player_{}", player_ptr->getPlayerIndex())));
+		component->setText(getPlayerName(*player_ptr));
+		component->setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
+	}
 }
 
 sf::Vector2f GameState::calculateCardPosition(const Player& player, int cardOrder) const
@@ -117,7 +112,7 @@ sf::Vector2f GameState::calculateCardPosition(const Player& player, int cardOrde
 
 sf::Vector2f GameState::getCardPositionOnTable(const Player& player) const
 {
-	return CARD_POSITION_ON_TABLE[player.getPlayerIndex()];
+	return CARD_POSITIONS_ON_TABLE[player.getPlayerIndex()];
 }
 
 std::string GameState::getPlayerName(const Player& player) const
@@ -142,46 +137,27 @@ void GameState::handleInput()
 			togglePause();
 		}
 	}
+
+	// TODO: UIComponent Click
 }
 
 void GameState::update(float dtSeconds)
 {
-	// Update moving sprites
-	for (auto& [card, data] : m_movingSprites)
+	for (auto& component : m_uiComponents)
 	{
-		data.m_elapsedTimeSeconds += dtSeconds;
+		component->onUpdate(dtSeconds);
 	}
-	// C++20 required
-	std::erase_if(m_movingSprites, [](const auto& item)
-	{
-		auto const& [key, value] = item;
-		return value.m_elapsedTimeSeconds >= value.m_moveTime;
-	});
-
-	// Update texts
-	for (auto& [key, textData] : m_texts)
-	{
-		if (textData->m_timeLeft > 0.f)
-		{
-			textData->m_timeLeft = std::max(0.f, textData->m_timeLeft - dtSeconds);
-		}
-	}
-	// C++20 required
-	std::erase_if(m_texts, [](const auto& item)
-	{
-		auto const& [key, value] = item;
-		return value->m_timeLeft == 0.f && value->m_deleteOnExpiration;
-	});
 
 	if (m_delayGameSeconds > 0.f)
 	{
 		m_delayGameSeconds -= dtSeconds;
 	}
 
-	const bool shouldPause = !m_movingSprites.empty() || m_delayGameSeconds > 0.f || m_shouldPauseGame;
-	m_belote.pauseStateMachine(shouldPause);
-
-	m_belote.updateState();
+	const bool shouldPause = m_delayGameSeconds > 0.f || m_shouldPauseGame || std::any_of(m_uiComponents.begin(), m_uiComponents.end(), [](auto& item) { return item->isMoving(); });
+	if (!shouldPause)
+	{
+		m_belote.updateState();
+	}
 }
 
 void GameState::draw()
@@ -189,83 +165,7 @@ void GameState::draw()
 	sf::RenderWindow& window = Application::getInstance()->getWindow();
 	window.clear(sf::Color::Green);
 
-	window.draw(m_background);
-
-	if (!m_belote.getDeck().empty())
-	{
-		m_cardBack.setPosition(DECK_POSITION);
-		window.draw(m_cardBack);
-	}
-
-	for (size_t i = 0; i < m_belote.getPlayers().size(); ++i)
-	{
-		for (size_t j = 0; j < m_belote.getPlayers()[i]->getCards().size(); ++j)
-		{
-			const Card* card = m_belote.getPlayers()[i]->getCards()[j];
-
-			if (m_movingSprites.find(card) != m_movingSprites.end())
-			{
-				continue;
-				
-			}
-
-			sf::Vector2f position = calculateCardPosition(*m_belote.getPlayers()[i], j);
-
-			sf::Sprite& sprite = m_cardSprites[card];
-			sprite.setPosition(position);
-			m_cardBackground.setPosition(position);
-
-			window.draw(m_cardBackground);
-			window.draw(sprite);
-		}
-	}
-
-	for (int i = m_belote.getCurrentTrickCards().size() - 1; i >= 0; --i)
-	{
-		const Card* card = m_belote.getCurrentTrickCards()[i];
-		if (m_movingSprites.find(card) != m_movingSprites.end())
-		{
-			continue;
-		}
-
-		size_t playerIndex = m_belote.getActivePlayerIndex();
-		for (size_t j = i; j < m_belote.getCurrentTrickCards().size() - 1; ++j)
-		{
-			playerIndex = m_belote.getPreviousPlayerIndex(playerIndex);
-		}
-
-		const sf::Vector2f position = getCardPositionOnTable(*m_belote.getPlayers()[playerIndex]);
-		sf::Sprite& sprite = m_cardSprites[card];
-		sprite.setPosition(position);
-		m_cardBackground.setPosition(position);
-
-		window.draw(m_cardBackground);
-		window.draw(sprite);
-	}
-
-	for (auto& [card, moveData] : m_movingSprites)
-	{
-		const float elapsed = std::min(moveData.m_elapsedTimeSeconds / moveData.m_moveTime, 1.f);
-		const float x = std::lerp(moveData.m_startPosition.x, moveData.m_endPosition.x, elapsed);
-		const float y = std::lerp(moveData.m_startPosition.y, moveData.m_endPosition.y, elapsed);
-		sf::Vector2f position{ x, y };
-
-		moveData.m_sprite->setPosition(position);
-		m_cardBackground.setPosition(position);
-
-		window.draw(m_cardBackground);
-		window.draw(*moveData.m_sprite);
-	}
-
-	for (auto& [key, textData] : m_texts)
-	{
-		if (textData->m_timeLeft != 0.f)
-		{
-			window.draw(textData->m_text);
-		}
-	}
-
-	for (auto& [id, component_ptr] : m_uiComponents)
+	for (auto& component_ptr : m_uiComponents)
 	{
 		window.draw(*component_ptr);
 	}
@@ -277,29 +177,28 @@ void GameState::notify(const NotifyCardDealing& data)
 {
 	const auto targetPosition = calculateCardPosition(data.m_player, data.m_player.getCards().size() - 1);
 
-	SpriteMoveData moveData;
-	moveData.m_startPosition = DECK_POSITION;
-	moveData.m_endPosition = targetPosition;
-	moveData.m_moveTime = 0.5f;
-	moveData.m_sprite = &m_cardSprites[&data.m_card];
-	m_movingSprites[&data.m_card] = moveData;
+	UIComponent* card = findComponent(data.m_card.toString());
+	card->moveToPosition(targetPosition, 1.f);
+	card->setVisible(true);
 
-	m_belote.pauseStateMachine(true);
+	if (m_belote.getDeck().empty())
+	{
+		findComponent("card_back")->setVisible(false);
+	}
 }
 
 void GameState::notify(const NotifyContractVote& data)
 {
 	const std::string key = std::format("player {} vote:", data.m_player.getPlayerIndex());
-	if (!m_uiComponents.contains(key)) // C++20
+	if (!findComponent(key))
 	{
-		std::unique_ptr<UIComponent>& component = m_uiComponents[key];
-		component = std::make_unique<UIComponent>();
+		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(key));
 		component->setText(key + contractToString(data.m_contract));
 		component->setPosition({ 0.f, 36.f * data.m_player.getPlayerIndex() });
 	}
 	else
 	{
-		m_uiComponents[key]->setText(m_uiComponents[key]->getText() + ", " + contractToString(data.m_contract));
+		findComponent(key)->setText(findComponent(key)->getText() + ", " + contractToString(data.m_contract));
 	}
 
 	delayGame(WAIT_TIME_AFTER_BIDDING);
@@ -307,17 +206,11 @@ void GameState::notify(const NotifyContractVote& data)
 
 void GameState::notify(const NotifyCardAboutToBePlayed& data)
 {
-	sf::Sprite& sprite = m_cardSprites[&data.m_card];
+	findComponent(data.m_card.toString())->moveToPosition(getCardPositionOnTable(data.m_player));
 
-	SpriteMoveData moveData;
-	moveData.m_startPosition = sprite.getPosition();
-	moveData.m_endPosition = getCardPositionOnTable(data.m_player);
-	moveData.m_moveTime = 0.5f;
-	moveData.m_sprite = &sprite;
-	m_movingSprites[&data.m_card] = moveData;
-
-	m_belote.pauseStateMachine(true);
 	delayGame(WAIT_TIME_AFTER_PLAYING);
+
+	// TODO: update card UI positions
 }
 
 void GameState::delayGame(float seconds)
@@ -329,18 +222,15 @@ void GameState::togglePause()
 {
 	m_shouldPauseGame = !m_shouldPauseGame;
 
-	if (!m_texts.contains("pause")) // C++20
-	{
-		TextData textData;
-		textData.m_text.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
-		textData.m_text.setCharacterSize(72);
-		textData.m_text.setFillColor(sf::Color::Red);
-		textData.m_text.setString("GAME PAUSED!");
-		textData.m_text.setPosition(DECK_POSITION );
-		//center
-		textData.m_text.setOrigin({ textData.m_text.getGlobalBounds().width / 2.f + textData.m_text.getLocalBounds().left, textData.m_text.getGlobalBounds().height / 2.f + textData.m_text.getLocalBounds().top });
-		m_texts["pause"] = std::make_unique<TextData>(std::move(textData));
-	}
+	findComponent("pause")->setVisible(m_shouldPauseGame);
+}
 
-	m_texts["pause"]->m_timeLeft = m_shouldPauseGame ? -1.f : 0.f;
+UIComponent* GameState::findComponent(const std::string& key)
+{
+	auto iter = std::find_if(m_uiComponents.begin(), m_uiComponents.end(), [&key](auto& component)
+	{
+		return component->getKey() == key;
+	});
+
+	return iter == m_uiComponents.end() ? nullptr : (*iter).get();
 }

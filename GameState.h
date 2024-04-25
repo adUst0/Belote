@@ -29,36 +29,13 @@ public:
 	void							delayGame(float seconds);
 	void							togglePause();
 
+	UIComponent*					findComponent(const std::string& key);
+
 private:
 
-	/*
-	* UIComponent
-	*	setPosition - m_position
-	*	setVisible - m_visible
-	*	animation
-	*	draw() override
-	
-	* UITextComponent
-	* 
-	*/
-
-	struct SpriteMoveData
-	{
-		sf::Vector2f m_startPosition;
-		sf::Vector2f m_endPosition;
-		float m_elapsedTimeSeconds = 0.f;
-		float m_moveTime = 0.5f;
-		sf::Sprite* m_sprite = nullptr;
-	};
-
-	struct TextData
-	{
-		sf::Text m_text;
-		float m_timeLeft = -1.f;
-		bool m_deleteOnExpiration = false;
-	};
-
 	void											createCardSprites();
+	void											createPlayerNames();
+
 	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder) const;
 	sf::Vector2f									getCardPositionOnTable(const Player& player) const;
 
@@ -66,20 +43,8 @@ private:
 
 	Belote											m_belote;
 
-	sf::Sprite										m_cardBack;
-
-	sf::RectangleShape								m_cardBackground;
-	std::unordered_map<const Card*, sf::Sprite>		m_cardSprites;
-	std::unordered_map<std::string, std::unique_ptr<TextData>>	m_texts;
-
-	std::unordered_map<std::string, std::unique_ptr<UIComponent>> m_uiComponents;
-
-	std::unordered_map<const Card*, SpriteMoveData> m_movingSprites;
-
+	std::vector<std::unique_ptr<UIComponent>>		m_uiComponents;
 	
-
-	sf::Sprite										m_background;
-
 	float											m_delayGameSeconds = 0.f;
 	bool											m_shouldPauseGame = false;
 };

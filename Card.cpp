@@ -47,12 +47,6 @@ const std::string& stringFromRank(Rank rank)
 Card::Card(Suit suit, Rank rank)
 	: m_suit(suit)
 	, m_rank(rank)
+	, m_toString(std::format("Card {} {}", stringFromSuit(suit), stringFromRank(rank)))
 {
-	
-}
-
-std::ostream& operator<<(std::ostream& out, const Card& card)
-{
-	out << stringFromSuit(card.getSuit()) << " " << stringFromRank(card.getRank());
-	return out;
 }

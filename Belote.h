@@ -76,8 +76,6 @@ public:
 	void										enterState(BeloteState state);
 	void										updateState();
 
-	void										pauseStateMachine(bool pause) { m_isStateMachinePaused = pause; }
-
 private:
 
 	void										cutDeck();
@@ -116,8 +114,6 @@ private:
 
 	std::vector<Contract>						m_contractVotes;
 	Contract									m_contract = Contract::Num;
-
-	bool										m_isStateMachinePaused = false;
 
 	static std::vector<std::unique_ptr<Card>>	s_cards;
 };

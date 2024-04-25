@@ -36,14 +36,16 @@ const std::string& stringFromRank(Rank rank);
 
 class Card
 {
-	friend std::ostream& operator<<(std::ostream& out, const Card& card);
 public:
 	Card(Suit suit, Rank rank);
 
 	Suit							getSuit() const { return m_suit; }
 	Rank							getRank() const { return m_rank; }
 
+	const std::string&				toString() const { return m_toString; }
+
 private:
 	Suit							m_suit;
 	Rank							m_rank;
+	std::string						m_toString;
 };
