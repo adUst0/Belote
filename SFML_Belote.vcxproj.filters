@@ -81,6 +81,9 @@
     <ClCompile Include="UIComponent.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="UIState.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files\Game</Filter>
     </ClInclude>
     <ClInclude Include="UIComponent.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="UIState.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,10 +15,11 @@ void UIComponent::addSprite(const std::string& texturePath, float scale)
 	sf::Sprite& sprite = m_sprites.emplace_back(texture);
 	sprite.setScale({ scale, scale });
 
-	updateBackgroundRectangle();
+	updateBackgroundRectangleSize();
+	updateOrigin();
 }
 
-void UIComponent::setText(const std::string& str, const sf::Color& color /*= sf::Color::Black*/, unsigned int size /*= 36u*/, bool centered /*= false*/)
+void UIComponent::setText(const std::string& str, const sf::Color& color /*= sf::Color::Black*/, unsigned int size /*= 36u*/)
 {
 	m_text.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
 
@@ -26,12 +27,8 @@ void UIComponent::setText(const std::string& str, const sf::Color& color /*= sf:
 	m_text.setFillColor(color);
 	m_text.setString(str);
 
-	if (centered)
-	{
-		m_text.setOrigin({ m_text.getGlobalBounds().width / 2.f + m_text.getLocalBounds().left, m_text.getGlobalBounds().height / 2.f + m_text.getLocalBounds().top });
-	}
-
-	updateBackgroundRectangle();
+	updateBackgroundRectangleSize();
+	updateOrigin();
 }
 
 void UIComponent::setBackground(const sf::Color& color)
@@ -42,11 +39,23 @@ void UIComponent::setBackground(const sf::Color& color)
 	}
 
 	m_background->setFillColor(color);
-	updateBackgroundRectangle();
+	updateBackgroundRectangleSize();
+	updateOrigin();
 }
 
-void UIComponent::setPosition(const sf::Vector2f& position)
+void UIComponent::setOriginCenter(bool value)
 {
+	m_isOriginCenter = value;
+	updateOrigin();
+}
+
+void UIComponent::setPosition(const sf::Vector2f& position, bool cancelCurrentMoveAnimation /*= true*/)
+{
+	if (cancelCurrentMoveAnimation && m_moveAnimation)
+	{
+		m_moveAnimation.reset();
+	}
+
 	m_position = position;
 
 	if (m_background)
@@ -98,7 +107,7 @@ void UIComponent::onUpdate(float deltaTimeSeconds)
 		const float elapsed = std::min(m_moveAnimation->m_elapsedTimeSeconds / m_moveAnimation->m_animationTimeSeconds, 1.f);
 		const float x = std::lerp(m_moveAnimation->m_startPosition.x, m_moveAnimation->m_endPosition.x, elapsed);
 		const float y = std::lerp(m_moveAnimation->m_startPosition.y, m_moveAnimation->m_endPosition.y, elapsed);
-		setPosition({ x, y });
+		setPosition({ x, y }, false);
 
 		if (elapsed == 1.f)
 		{
@@ -130,7 +139,7 @@ void UIComponent::draw(sf::RenderTarget& target, sf::RenderStates /*states*/) co
 	}
 }
 
-void UIComponent::updateBackgroundRectangle()
+void UIComponent::updateBackgroundRectangleSize()
 {
 	if (!m_background)
 	{
@@ -144,5 +153,23 @@ void UIComponent::updateBackgroundRectangle()
 	else if (!m_text.getString().isEmpty())
 	{
 		m_background->setSize({ m_text.getGlobalBounds().width, m_text.getGlobalBounds().height });
+	}
+}
+
+void UIComponent::updateOrigin()
+{
+	if (m_isOriginCenter)
+	{
+		m_text.setOrigin({ m_text.getGlobalBounds().width / 2.f + m_text.getLocalBounds().left, m_text.getGlobalBounds().height / 2.f + m_text.getLocalBounds().top });
+	
+		for (sf::Sprite& sprite : m_sprites)
+		{
+			sprite.setOrigin({ sprite.getGlobalBounds().width / 2.f + sprite.getLocalBounds().left, sprite.getGlobalBounds().height / 2.f + sprite.getLocalBounds().top });
+		}
+
+		if (m_background)
+		{
+			m_background->setOrigin({ m_background->getGlobalBounds().width / 2.f + m_background->getLocalBounds().left, m_background->getGlobalBounds().height / 2.f + m_background->getLocalBounds().top });
+		}
 	}
 }

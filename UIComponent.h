@@ -14,10 +14,12 @@ public:
 	void								addSprite(const std::string& texturePath, float scale = 1.f);
 
 	std::string							getText() const { return m_text.getString().toAnsiString(); }
-	void								setText(const std::string& str, const sf::Color& color = sf::Color::Black, unsigned int size = 36u, bool centered = false);
+	void								setText(const std::string& str, const sf::Color& color = sf::Color::Black, unsigned int size = 36u);
 	void								setBackground(const sf::Color& color);
 
-	void								setPosition(const sf::Vector2f& position);
+	void								setOriginCenter(bool value);
+
+	void								setPosition(const sf::Vector2f& position, bool cancelCurrentMoveAnimation = true);
 	void								moveToPosition(const sf::Vector2f& targetPosition, float animationTime = 0.5f);
 	bool								isMoving() const { return m_moveAnimation != nullptr; }
 
@@ -48,7 +50,8 @@ private:
 		{}
 	};
 
-	void								updateBackgroundRectangle();
+	void								updateBackgroundRectangleSize();
+	void								updateOrigin();
 
 	std::string							m_key;
 
@@ -61,10 +64,9 @@ private:
 	std::unique_ptr<MoveAnimation>		m_moveAnimation;
 
 	bool								m_isVisible = true;
+	bool								m_isOriginCenter = false;
 
 	std::function<void(void)>			m_onMouseLeftClick;
-	std::function<void(void)>			m_onMouseOn;
-	std::function<void(void)>			m_onMouseOff;
 
 	// TODO: Origin center for all components, markForDestroy, hover states or callback
 };

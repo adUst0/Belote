@@ -6,11 +6,12 @@
 #include "Belote.h"
 #include "Observer.h"
 #include "ObserverMessages.h"
+#include "UIState.h"
 
 class UIComponent;
 
 class GameState
-	: public BaseState
+	: public UIState
 	, public Observer<NotifyCardDealing>
 	, public Observer<NotifyContractVote>
 	, public Observer<NotifyCardAboutToBePlayed>
@@ -29,8 +30,6 @@ public:
 	void							delayGame(float seconds);
 	void							togglePause();
 
-	UIComponent*					findComponent(const std::string& key);
-
 private:
 
 	void											createCardSprites();
@@ -42,8 +41,6 @@ private:
 	std::string										getPlayerName(const Player& player) const;
 
 	Belote											m_belote;
-
-	std::vector<std::unique_ptr<UIComponent>>		m_uiComponents;
 	
 	float											m_delayGameSeconds = 0.f;
 	bool											m_shouldPauseGame = false;

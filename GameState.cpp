@@ -49,16 +49,17 @@ namespace
 }
 
 GameState::GameState(StateMachine& stateMachine)
-	: BaseState(stateMachine)
+	: UIState(stateMachine)
 {
-	auto& background = m_uiComponents.emplace_back(std::make_unique<UIComponent>("background"));
+	UIComponent* background = getOrCreateComponent("background");
 	background->addSprite("assets/background.jpg");
 
 	createCardSprites();
 	createPlayerNames();
 
-	auto& pauseText = m_uiComponents.emplace_back(std::make_unique<UIComponent>("pause"));
-	pauseText->setText("GAME PAUSED!", sf::Color::Red, 72, true);
+	UIComponent* pauseText = getOrCreateComponent("pause");
+	pauseText->setText("GAME PAUSED!", sf::Color::Red, 72);
+	pauseText->setOriginCenter(true);
 	pauseText->setVisible(m_shouldPauseGame);
 	pauseText->setPosition(DECK_POSITION);
 
@@ -71,27 +72,24 @@ void GameState::createCardSprites()
 {
 	for (const Card* card : m_belote.getDeck())
 	{
-		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(card->toString()));
-
+		UIComponent* component = getOrCreateComponent(card->toString());
 		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
 		component->addSprite(path, CARD_SCALE.x);
 		component->setBackground(sf::Color::White);
 		component->setPosition(DECK_POSITION);
 		component->setVisible(false);
-
-		Application::getInstance()->getAssetsManager().loadTexture(path, path);
 	}
 
-	std::unique_ptr<UIComponent>& card_back = m_uiComponents.emplace_back(std::make_unique<UIComponent>("card_back"));
-	card_back->addSprite("assets/card_back.png", CARD_SCALE.x);
-	card_back->setPosition(DECK_POSITION);
+	UIComponent* cardBack = getOrCreateComponent("card_back");
+	cardBack->addSprite("assets/card_back.png", CARD_SCALE.x);
+	cardBack->setPosition(DECK_POSITION);
 }
 
 void GameState::createPlayerNames()
 {
 	for (const auto& player_ptr : m_belote.getPlayers())
 	{
-		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(std::format("player_{}", player_ptr->getPlayerIndex())));
+		UIComponent* component = getOrCreateComponent(std::format("player_{}", player_ptr->getPlayerIndex()));
 		component->setText(getPlayerName(*player_ptr));
 		component->setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
 		component->onMouseLeftClick([key = component->getKey()](){
@@ -126,7 +124,6 @@ std::string GameState::getPlayerName(const Player& player) const
 void GameState::handleInput()
 {
 	sf::RenderWindow& window = Application::getInstance()->getWindow();
-
 	sf::Event event;
 
 	while (window.pollEvent(event))
@@ -134,10 +131,6 @@ void GameState::handleInput()
 		if (sf::Event::Closed == event.type)
 		{
 			window.close();
-		}
-		else if (sf::Event::KeyReleased == event.type && event.key.code == sf::Keyboard::Key::F5)
-		{
-			togglePause();
 		}
 		else if (sf::Event::MouseButtonReleased == event.type && event.mouseButton.button == sf::Mouse::Button::Left)
 		{
@@ -150,15 +143,16 @@ void GameState::handleInput()
 				}
 			}
 		}
+		else if (sf::Event::KeyReleased == event.type && event.key.code == sf::Keyboard::Key::F5)
+		{
+			togglePause();
+		}
 	}
 }
 
 void GameState::update(float dtSeconds)
 {
-	for (auto& component : m_uiComponents)
-	{
-		component->onUpdate(dtSeconds);
-	}
+	UIState::update(dtSeconds);
 
 	if (m_delayGameSeconds > 0.f)
 	{
@@ -174,43 +168,37 @@ void GameState::update(float dtSeconds)
 
 void GameState::draw()
 {
-	sf::RenderWindow& window = Application::getInstance()->getWindow();
-	window.clear(sf::Color::Green);
-
-	for (auto& component_ptr : m_uiComponents)
-	{
-		window.draw(*component_ptr);
-	}
-
-	window.display();
+	UIState::draw();
 }
 
 void GameState::notify(const NotifyCardDealing& data)
 {
 	const auto targetPosition = calculateCardPosition(data.m_player, data.m_player.getCards().size() - 1);
 
-	UIComponent* card = findComponent(data.m_card.toString());
+	UIComponent* card = getComponent(data.m_card.toString());
 	card->moveToPosition(targetPosition, 1.f);
 	card->setVisible(true);
 
 	if (m_belote.getDeck().empty())
 	{
-		findComponent("card_back")->setVisible(false);
+		getComponent("card_back")->setVisible(false);
 	}
 }
 
 void GameState::notify(const NotifyContractVote& data)
 {
 	const std::string key = std::format("player {} vote:", data.m_player.getPlayerIndex());
-	if (!findComponent(key))
+	UIComponent* voteText = getComponent(key);
+
+	if (!voteText)
 	{
-		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(key));
-		component->setText(key + contractToString(data.m_contract));
-		component->setPosition({ 0.f, 36.f * data.m_player.getPlayerIndex() });
+		voteText = getOrCreateComponent(key);
+		voteText->setText(key + contractToString(data.m_contract));
+		voteText->setPosition({ 0.f, 36.f * data.m_player.getPlayerIndex() });
 	}
 	else
 	{
-		findComponent(key)->setText(findComponent(key)->getText() + ", " + contractToString(data.m_contract));
+		voteText->setText(voteText->getText() + ", " + contractToString(data.m_contract));
 	}
 
 	delayGame(WAIT_TIME_AFTER_BIDDING);
@@ -218,11 +206,18 @@ void GameState::notify(const NotifyContractVote& data)
 
 void GameState::notify(const NotifyCardAboutToBePlayed& data)
 {
-	findComponent(data.m_card.toString())->moveToPosition(getCardPositionOnTable(data.m_player));
+	getComponent(data.m_card.toString())->moveToPosition(getCardPositionOnTable(data.m_player));
+
+	// Update card in hands position
+	size_t index = 0;
+	for (const Card* card : data.m_player.getCards())
+	{
+		if (card == &data.m_card) continue;
+		//getComponent(card->toString())->setPosition(calculateCardPosition(data.m_player, index++));
+		getComponent(card->toString())->moveToPosition(calculateCardPosition(data.m_player, index++), 0.4f);
+	}
 
 	delayGame(WAIT_TIME_AFTER_PLAYING);
-
-	// TODO: update card UI positions
 }
 
 void GameState::delayGame(float seconds)
@@ -234,15 +229,5 @@ void GameState::togglePause()
 {
 	m_shouldPauseGame = !m_shouldPauseGame;
 
-	findComponent("pause")->setVisible(m_shouldPauseGame);
-}
-
-UIComponent* GameState::findComponent(const std::string& key)
-{
-	auto iter = std::find_if(m_uiComponents.begin(), m_uiComponents.end(), [&key](auto& component)
-	{
-		return component->getKey() == key;
-	});
-
-	return iter == m_uiComponents.end() ? nullptr : (*iter).get();
+	getComponent("pause")->setVisible(m_shouldPauseGame);
 }
