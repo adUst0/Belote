@@ -94,6 +94,9 @@ void GameState::createPlayerNames()
 		std::unique_ptr<UIComponent>& component = m_uiComponents.emplace_back(std::make_unique<UIComponent>(std::format("player_{}", player_ptr->getPlayerIndex())));
 		component->setText(getPlayerName(*player_ptr));
 		component->setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
+		component->onMouseLeftClick([key = component->getKey()](){
+			std::cout << "YOU CLICKED ME: " << key << std::endl;
+		});
 	}
 }
 
@@ -136,9 +139,18 @@ void GameState::handleInput()
 		{
 			togglePause();
 		}
+		else if (sf::Event::MouseButtonReleased == event.type && event.mouseButton.button == sf::Mouse::Button::Left)
+		{
+			// Start in reverse order because the last element is rendered on top
+			for (auto rit = m_uiComponents.rbegin(); rit != m_uiComponents.rend(); ++rit)
+			{
+				if ((*rit)->handleLeftMouseClick({ (float)event.mouseButton.x, (float)event.mouseButton.y }))
+				{
+					break;
+				}
+			}
+		}
 	}
-
-	// TODO: UIComponent Click
 }
 
 void GameState::update(float dtSeconds)

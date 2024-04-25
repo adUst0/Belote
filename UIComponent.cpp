@@ -67,6 +67,28 @@ void UIComponent::moveToPosition(const sf::Vector2f& targetPosition, float anima
 	m_moveAnimation = std::make_unique<MoveAnimation>(m_position, targetPosition, animationTime);
 }
 
+void UIComponent::onMouseLeftClick(const std::function<void(void)>& callback)
+{
+	m_onMouseLeftClick = callback;
+}
+
+bool UIComponent::handleLeftMouseClick(const sf::Vector2f& mousePosition)
+{
+	if (!m_isVisible || !m_onMouseLeftClick || m_sprites.empty() && m_text.getString().isEmpty())
+	{
+		return false;
+	}
+
+	const sf::FloatRect rectangle = m_sprites.empty() ? m_text.getGlobalBounds() : m_sprites[0].getGlobalBounds();
+	if (rectangle.contains(mousePosition))
+	{
+		m_onMouseLeftClick();
+		return true;
+	}
+
+	return false;
+}
+
 void UIComponent::onUpdate(float deltaTimeSeconds)
 {
 	if (m_moveAnimation)

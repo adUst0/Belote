@@ -9,41 +9,51 @@ void SplashState::onEnterState(bool isResume)
 		return;
 	}
 
-	Application::getInstance()->getAssetsManager().loadTexture("assets/background.jpg", "assets/background.jpg");
-	m_background.setTexture(Application::getInstance()->getAssetsManager().getTexture("assets/background.jpg"), true);
+	UIComponent* background = getOrCreateComponent("background");
+	background->addSprite("assets/background.jpg");
 
-	m_buttonBackground.setSize(s_buttonSize);
-	m_buttonBackground.setOrigin({ s_buttonSize.x / 2.f, s_buttonSize.y / 2.f });
-	m_buttonBackground.setFillColor(sf::Color(255, 0, 0, 255));
-
-	m_startGameText.setFont(Application::getInstance()->getAssetsManager().getDefaultFont());
-	m_startGameText.setString("New Game");
-	m_startGameText.setCharacterSize(72);
-	m_startGameText.setFillColor(sf::Color::Black);
-	// Center
-	m_startGameText.setOrigin({ m_startGameText.getGlobalBounds().width / 2.f + m_startGameText.getLocalBounds().left, m_startGameText.getGlobalBounds().height / 2.f + +m_startGameText.getLocalBounds().top });
+	UIComponent* startButton = getOrCreateComponent("start_button");
+	startButton->setText("New Game", sf::Color::Black, 72, true);
+	startButton->setBackground(sf::Color(255, 0, 0, 255));
+	startButton->onMouseLeftClick([this]() { m_startGame = true; });
 
 	const sf::Vector2u size = Application::getInstance()->getWindow().getSize();
-
-	m_buttonBackground.setPosition({ size.x / 2.f, size.y / 2.f });
-	m_startGameText.setPosition({ size.x / 2.f, size.y / 2.f });
+	startButton->setPosition({ size.x / 2.f, size.y / 2.f });
 }
 
 void SplashState::handleInput()
 {
-	BaseState::handleInput();
+	sf::RenderWindow& window = Application::getInstance()->getWindow();
 
-	if (Application::getInstance()->getInputManager().isObjectClicked(m_startGameText, sf::Mouse::Button::Left, Application::getInstance()->getWindow()))
+	sf::Event event;
+
+	while (window.pollEvent(event))
 	{
-		m_startGame = true;
+		if (sf::Event::Closed == event.type)
+		{
+			window.close();
+		}
+		else if (sf::Event::MouseButtonReleased == event.type && event.mouseButton.button == sf::Mouse::Button::Left)
+		{
+			// Start in reverse order because the last element is rendered on top
+			for (auto rit = m_ui.rbegin(); rit != m_ui.rend(); ++rit)
+			{
+				if ((*rit)->handleLeftMouseClick({ (float)event.mouseButton.x, (float)event.mouseButton.y }))
+				{
+					break;
+				}
+			}
+		}
 	}
-
-	const bool hovered = Application::getInstance()->getInputManager().isMouseOverObject(m_buttonBackground, Application::getInstance()->getWindow());
-	m_buttonBackground.setFillColor(sf::Color(255, 0, 0, hovered ? 200 : 255));
 }
 
 void SplashState::update(float dtSeconds)
 {
+	for (auto& component_ptr : m_ui)
+	{
+		component_ptr->onUpdate(dtSeconds);
+	}
+
 	if (m_startGame)
 	{
 		m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine));
@@ -55,9 +65,22 @@ void SplashState::draw()
 	sf::RenderWindow& window = Application::getInstance()->getWindow();
 	window.clear(sf::Color::White);
 
-	window.draw(m_background);
-	window.draw(m_buttonBackground);
-	window.draw(m_startGameText);
+	for (auto& component_ptr : m_ui)
+	{
+		window.draw(*component_ptr);
+	}
 
 	window.display();
+}
+
+UIComponent* SplashState::getOrCreateComponent(const std::string& key)
+{
+	auto iter = std::find_if(m_ui.begin(), m_ui.end(), [&key](auto& ptr) { return ptr->getKey() == key; });
+	if (iter != m_ui.end())
+	{
+		return (*iter).get();
+	}
+
+	std::unique_ptr<UIComponent>& component = m_ui.emplace_back(std::make_unique<UIComponent>(key));
+	return component.get();
 }

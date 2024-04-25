@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
+#include <functional>
 
 class UIComponent : public sf::Drawable
 {
@@ -20,14 +21,17 @@ public:
 	void								moveToPosition(const sf::Vector2f& targetPosition, float animationTime = 0.5f);
 	bool								isMoving() const { return m_moveAnimation != nullptr; }
 
-	void								onUpdate(float deltaTimeSeconds);
-
-	virtual void						draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
 	void								setVisible(bool visible) { m_isVisible = visible; }
 	bool								IsVisible() const { return m_isVisible; }
 
 	const std::string&					getKey() const { return m_key; }
+
+	void								onMouseLeftClick(const std::function<void(void)>& callback);
+
+	// Internal methods to be called only by the Class that manages the UI components
+	bool								handleLeftMouseClick(const sf::Vector2f& mousePosition);
+	void								onUpdate(float deltaTimeSeconds);
+	virtual void						draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 private:
 	struct MoveAnimation
@@ -58,6 +62,10 @@ private:
 
 	bool								m_isVisible = true;
 
-	// TODO: markForDestroy
+	std::function<void(void)>			m_onMouseLeftClick;
+	std::function<void(void)>			m_onMouseOn;
+	std::function<void(void)>			m_onMouseOff;
+
+	// TODO: Origin center for all components, markForDestroy, hover states or callback
 };
 
