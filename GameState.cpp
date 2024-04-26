@@ -74,14 +74,14 @@ void GameState::createCardSprites()
 	{
 		UIComponent* component = getOrCreateComponent(card->toString());
 		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
-		component->addSprite(path, CARD_SCALE.x);
+		component->addSprite(path, CARD_SCALE);
 		component->setBackground(sf::Color::White);
 		component->setPosition(DECK_POSITION);
 		component->setVisible(false);
 	}
 
 	UIComponent* cardBack = getOrCreateComponent("card_back");
-	cardBack->addSprite("assets/card_back.png", CARD_SCALE.x);
+	cardBack->addSprite("assets/card_back.png", CARD_SCALE);
 	cardBack->setPosition(DECK_POSITION);
 }
 

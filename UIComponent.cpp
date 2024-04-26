@@ -7,13 +7,13 @@ UIComponent::UIComponent(const std::string& key)
 
 }
 
-void UIComponent::addSprite(const std::string& texturePath, float scale)
+void UIComponent::addSprite(const std::string& texturePath, const sf::Vector2f& scale)
 {
 	Application::getInstance()->getAssetsManager().loadTexture(texturePath, texturePath);
 	const sf::Texture& texture = Application::getInstance()->getAssetsManager().getTexture(texturePath);
 
 	sf::Sprite& sprite = m_sprites.emplace_back(texture);
-	sprite.setScale({ scale, scale });
+	sprite.setScale(scale);
 
 	updateBackgroundRectangleSize();
 	updateOrigin();
@@ -81,6 +81,16 @@ void UIComponent::onMouseLeftClick(const std::function<void(void)>& callback)
 	m_onMouseLeftClick = callback;
 }
 
+void UIComponent::onMouseOn(const std::function<void(void)>& callback)
+{
+	m_onMouseOn = callback;
+}
+
+void UIComponent::onMouseOff(const std::function<void(void)>& callback)
+{
+	m_onMouseOff = callback;
+}
+
 bool UIComponent::handleLeftMouseClick(const sf::Vector2f& mousePosition)
 {
 	if (!m_isVisible || !m_onMouseLeftClick || m_sprites.empty() && m_text.getString().isEmpty())
@@ -88,14 +98,36 @@ bool UIComponent::handleLeftMouseClick(const sf::Vector2f& mousePosition)
 		return false;
 	}
 
-	const sf::FloatRect rectangle = m_sprites.empty() ? m_text.getGlobalBounds() : m_sprites[0].getGlobalBounds();
-	if (rectangle.contains(mousePosition))
+	if (isMouseOver(mousePosition))
 	{
 		m_onMouseLeftClick();
 		return true;
 	}
 
 	return false;
+}
+
+bool UIComponent::handleMouseOver(const sf::Vector2f& mousePosition)
+{
+	const bool wasMouseOver = m_isMouseOver;
+	m_isMouseOver = isMouseOver(mousePosition);
+
+	if (!wasMouseOver && m_isMouseOver)
+	{
+		if (m_onMouseOn)
+		{
+			m_onMouseOn();
+		}
+	}
+	else if (wasMouseOver && !m_isMouseOver)
+	{
+		if (m_onMouseOff)
+		{
+			m_onMouseOff();
+		}
+	}
+
+	return m_isMouseOver;
 }
 
 void UIComponent::onUpdate(float deltaTimeSeconds)
@@ -116,10 +148,16 @@ void UIComponent::onUpdate(float deltaTimeSeconds)
 	}
 }
 
-void UIComponent::draw(sf::RenderTarget& target, sf::RenderStates /*states*/) const
+void UIComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	if (!m_isVisible || m_text.getString().isEmpty() && m_sprites.empty())
 	{
+		return;
+	}
+
+	if (m_isMouseOver && m_hoverState)
+	{
+		m_hoverState->draw(target, states);
 		return;
 	}
 
@@ -137,6 +175,17 @@ void UIComponent::draw(sf::RenderTarget& target, sf::RenderStates /*states*/) co
 	{
 		target.draw(m_text);
 	}
+}
+
+bool UIComponent::isMouseOver(const sf::Vector2f& mousePosition) const
+{
+	const sf::FloatRect rectangle = m_sprites.empty() ? m_text.getGlobalBounds() : m_sprites[0].getGlobalBounds();
+	return rectangle.contains(mousePosition);
+}
+
+void UIComponent::setHoverState(std::unique_ptr<UIComponent>&& state)
+{
+	m_hoverState = std::move(state);
 }
 
 void UIComponent::updateBackgroundRectangleSize()
@@ -160,16 +209,19 @@ void UIComponent::updateOrigin()
 {
 	if (m_isOriginCenter)
 	{
-		m_text.setOrigin({ m_text.getGlobalBounds().width / 2.f + m_text.getLocalBounds().left, m_text.getGlobalBounds().height / 2.f + m_text.getLocalBounds().top });
+		const sf::FloatRect textBounds = m_text.getLocalBounds();
+		m_text.setOrigin({ textBounds.width / 2.f, textBounds.height / 2.f + textBounds.top });
 	
 		for (sf::Sprite& sprite : m_sprites)
 		{
-			sprite.setOrigin({ sprite.getGlobalBounds().width / 2.f + sprite.getLocalBounds().left, sprite.getGlobalBounds().height / 2.f + sprite.getLocalBounds().top });
+			const sf::FloatRect spriteBounds = sprite.getLocalBounds();
+			sprite.setOrigin({ spriteBounds.width / 2.f, spriteBounds.height / 2.f });
 		}
 
 		if (m_background)
 		{
-			m_background->setOrigin({ m_background->getGlobalBounds().width / 2.f + m_background->getLocalBounds().left, m_background->getGlobalBounds().height / 2.f + m_background->getLocalBounds().top });
+			const sf::FloatRect bgBounds = m_background->getLocalBounds();
+			m_background->setOrigin({ bgBounds.width / 2.f + bgBounds.left, bgBounds.height / 2.f + bgBounds.top });
 		}
 	}
 }

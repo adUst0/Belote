@@ -11,7 +11,7 @@ class UIComponent : public sf::Drawable
 public:
 	UIComponent(const std::string& key);
 
-	void								addSprite(const std::string& texturePath, float scale = 1.f);
+	void								addSprite(const std::string& texturePath, const sf::Vector2f& scale = sf::Vector2f(1.f, 1.f));
 
 	std::string							getText() const { return m_text.getString().toAnsiString(); }
 	void								setText(const std::string& str, const sf::Color& color = sf::Color::Black, unsigned int size = 36u);
@@ -29,11 +29,21 @@ public:
 	const std::string&					getKey() const { return m_key; }
 
 	void								onMouseLeftClick(const std::function<void(void)>& callback);
+	void								onMouseOn(const std::function<void(void)>& callback);
+	void								onMouseOff(const std::function<void(void)>& callback);
 
 	// Internal methods to be called only by the Class that manages the UI components
 	bool								handleLeftMouseClick(const sf::Vector2f& mousePosition);
+	bool								handleMouseOver(const sf::Vector2f& mousePosition);
 	void								onUpdate(float deltaTimeSeconds);
 	virtual void						draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
+	bool								isMouseOver(const sf::Vector2f& mousePosition) const;
+
+	void								setHoverState(std::unique_ptr<UIComponent>&& state);
+
+	void								markForDestruction() { m_isMarkedForDestruction = true; };
+	bool								isMarkedForDestruction() const { return m_isMarkedForDestruction; }
 
 private:
 	struct MoveAnimation
@@ -66,8 +76,14 @@ private:
 	bool								m_isVisible = true;
 	bool								m_isOriginCenter = false;
 
-	std::function<void(void)>			m_onMouseLeftClick;
+	bool								m_isMouseOver = false;
 
-	// TODO: Origin center for all components, markForDestroy, hover states or callback
+	std::function<void(void)>			m_onMouseLeftClick;
+	std::function<void(void)>			m_onMouseOn;
+	std::function<void(void)>			m_onMouseOff;
+
+	std::unique_ptr<UIComponent>		m_hoverState;
+
+	bool								m_isMarkedForDestruction = false;
 };
 

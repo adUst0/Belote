@@ -24,6 +24,17 @@ void UIState::handleInput()
 				}
 			}
 		}
+		else if (sf::Event::MouseMoved == event.type)
+		{
+			// Start in reverse order because the last element is rendered on top
+			for (auto rit = m_uiComponents.rbegin(); rit != m_uiComponents.rend(); ++rit)
+			{
+				if ((*rit)->handleMouseOver({ (float)event.mouseMove.x, (float)event.mouseMove.y }))
+				{
+					break;
+				}
+			}
+		}
 	}
 }
 
@@ -33,6 +44,8 @@ void UIState::update(float dtSeconds)
 	{
 		component_ptr->onUpdate(dtSeconds);
 	}
+
+	m_uiComponents.erase(std::remove_if(m_uiComponents.begin(), m_uiComponents.end(), [](const auto& component) { return component->isMarkedForDestruction(); }), m_uiComponents.end());
 }
 
 void UIState::draw()
