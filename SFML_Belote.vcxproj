@@ -162,6 +162,7 @@
     <ClCompile Include="SplashState.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="UIComponent.cpp" />
+    <ClCompile Include="UIManager.cpp" />
     <ClCompile Include="UIState.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
@@ -179,6 +180,7 @@
     <ClInclude Include="SplashState.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="UIComponent.h" />
+    <ClInclude Include="UIManager.h" />
     <ClInclude Include="UIState.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

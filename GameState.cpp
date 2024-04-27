@@ -13,6 +13,7 @@ namespace
 
 	const float							WAIT_TIME_AFTER_BIDDING = 0.5f;
 	const float							WAIT_TIME_AFTER_PLAYING = 1.f;
+	const float							CARD_DEALING_TIME_SECONDS = 0.5;
 
 	const unsigned int					SCREEN_WIDTH = 1600;
 	const unsigned int					SCREEN_HEIGHT = 900;
@@ -66,6 +67,7 @@ GameState::GameState(StateMachine& stateMachine)
 	static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyEndOfTrick>&>(*Application::getInstance()).registerObserver(*this);
 }
 
 void GameState::createCardSprites()
@@ -176,7 +178,7 @@ void GameState::notify(const NotifyCardDealing& data)
 	const auto targetPosition = calculateCardPosition(data.m_player, data.m_player.getCards().size() - 1);
 
 	UIComponent* card = getComponent(data.m_card.toString());
-	card->moveToPosition(targetPosition, 1.f);
+	card->moveToPosition(targetPosition, CARD_DEALING_TIME_SECONDS);
 	card->setVisible(true);
 
 	if (m_belote.getDeck().empty())
@@ -218,6 +220,14 @@ void GameState::notify(const NotifyCardAboutToBePlayed& data)
 	}
 
 	delayGame(WAIT_TIME_AFTER_PLAYING);
+}
+
+void GameState::notify(const NotifyEndOfTrick& /*data*/)
+{
+	for (const Card* card : m_belote.getCurrentTrickCards())
+	{
+		getComponent(card->toString())->setVisible(false);
+	}
 }
 
 void GameState::delayGame(float seconds)

@@ -69,7 +69,12 @@ public:
 	bool										isValidContractVote(Contract vote) const;
 
 	bool										isValidCardToPlay(const Card& card) const;
+	//std::vector<const Card*>					getValidCardsToPlay()
 	void										playCard(const Card& card);
+
+	// Trick functions
+	const Player*								getCurrentPlayerWinningTrick() const;
+	const Card*									getTrickHighestTrumpPlayed() const;
 
 	const std::vector<const Card*>&				getCurrentTrickCards() const { return m_currentTrickCards; }
 

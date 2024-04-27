@@ -296,49 +296,165 @@ bool Belote::isValidCardToPlay(const Card& card) const
 		return true;
 	}
 
-	const Suit suit = m_currentTrickCards[0]->getSuit();
-	const bool isTrump = isTrumpSuit(suit, m_contract);
+	const Player& player = getActivePlayer();
+	const Card* firstCard = m_currentTrickCards[0];
+	const bool isFirstCardTrump = isTrumpSuit(firstCard->getSuit(), m_contract);
 
-	if (suit == card.getSuit())
+	const bool hasPlayerSameSuit = std::any_of(getActivePlayer().getCards().begin(), getActivePlayer().getCards().end(), [firstCard](const Card* card) { return card->getSuit() == firstCard->getSuit(); });
+	if (hasPlayerSameSuit)
 	{
-		if (isTrump)
+		if (card.getSuit() != firstCard->getSuit())
 		{
-			return trumpRankCompare(card.getRank(), m_currentTrickCards[0]->getRank()) == 1;
+			return false;
+		}
+
+		// Do we need to play stronger card
+		if (isFirstCardTrump)
+		{
+			const Card* winnigCard = getTrickHighestTrumpPlayed();
+
+			const bool hasHigherRank = std::any_of(
+				getActivePlayer().getCards().begin(),
+				getActivePlayer().getCards().end(),
+				[rank = winnigCard->getRank(), suit = winnigCard->getSuit()](const Card* card)
+			{
+				return card->getSuit() == suit && trumpRankCompare(card->getRank(), rank) == 1;
+			}
+			);
+
+			return trumpRankCompare(card.getRank(), firstCard->getRank()) == 1 || !hasHigherRank;
 		}
 
 		return true;
 	}
 
-	const bool hasPlayerACardFromSuit = std::any_of(getActivePlayer().getCards().begin(), getActivePlayer().getCards().end(), [suit](const Card* card) { return card->getSuit() == suit; });
-	if (hasPlayerACardFromSuit)
+	// Player doesn't have the same suit
+	if (isFirstCardTrump)
 	{
-		return false;
+		return true; // doesn't matter what will play
 	}
 
-	// player doesn't have the same suit
-	if (!isTrump && isTrumpSuit(card.getSuit(), m_contract))
+	const bool isAllyWinning = getCurrentPlayerWinningTrick()->getTeamIndex() == getActivePlayer().getTeamIndex();
+	if (isAllyWinning)
 	{
-		Rank highestTrumpRankPlayed = Rank::Num;
-		for (int i = 0; i < m_currentTrickCards.size(); ++i)
+		return true;
+	}
+
+	const Card* highestTrumpPlayed = getTrickHighestTrumpPlayed();
+	if (!highestTrumpPlayed) // no trump played
+	{
+		const bool hasAnyTrumps = std::any_of(getActivePlayer().getCards().begin(), getActivePlayer().getCards().end(), [this](const Card* card)
 		{
+			return isTrumpSuit(card->getSuit(), m_contract);
+		});
 
-			if (highestTrumpRankPlayed == Rank::Num ||
-				m_currentTrickCards[i]->getSuit() == card.getSuit() && trumpRankCompare(m_currentTrickCards[i]->getRank(), highestTrumpRankPlayed) == 1)
-			{
-				highestTrumpRankPlayed = m_currentTrickCards[i]->getRank();
-			}
-		}
-
-		return highestTrumpRankPlayed == Rank::Num || trumpRankCompare(card.getRank(), highestTrumpRankPlayed) == 1;
+		return isTrumpSuit(card.getSuit(), m_contract) || !hasAnyTrumps;
 	}
 
-	return false;
+	const bool isCardHigherTrump = card.getSuit() == highestTrumpPlayed->getSuit() && trumpRankCompare(card.getRank(), highestTrumpPlayed->getRank()) == 1;
+	const bool hasPlayerHigherTrump = std::any_of(getActivePlayer().getCards().begin(), getActivePlayer().getCards().end(), [highestTrumpPlayed](const Card* card)
+	{
+		return card->getSuit() == highestTrumpPlayed->getSuit() && trumpRankCompare(card->getRank(), highestTrumpPlayed->getRank()) == 1;
+	});
+	
+	return isCardHigherTrump || !hasPlayerHigherTrump;
 }
 
 void Belote::playCard(const Card& card)
 {
 	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).notifyObservers(NotifyCardAboutToBePlayed(getActivePlayer(), card));
 	m_currentTrickCards.push_back(&card);
+}
+
+const Player* Belote::getCurrentPlayerWinningTrick() const
+{
+	if (m_currentTrickCards.empty())
+	{
+		return nullptr;
+	}
+
+	if (m_currentTrickCards.size() == 1)
+	{
+		m_players[getPreviousPlayerIndex()].get();
+	}
+
+	size_t playerIndex = getActivePlayerIndex();
+	for (const Card* card : m_currentTrickCards)
+	{
+		playerIndex = getPreviousPlayerIndex(playerIndex);
+	}
+
+	const Card* winnigCard = m_currentTrickCards[0];
+	size_t winningCardIndex = 0;
+	for (size_t i = 1; i < m_currentTrickCards.size(); ++i)
+	{
+		const Card* card = m_currentTrickCards[i];
+		if (isTrumpSuit(winnigCard->getSuit(), m_contract))
+		{
+			if (card->getSuit() == winnigCard->getSuit() && trumpRankCompare(card->getRank(), winnigCard->getRank()) == 1)
+			{
+				winnigCard = card;
+				winningCardIndex = i;
+			}
+		}
+		else
+		{
+			if (card->getSuit() == winnigCard->getSuit() && noTrumpRankCompare(card->getRank(), winnigCard->getRank()) == 1 ||
+				isTrumpSuit(card->getSuit(), m_contract))
+			{
+				winnigCard = card;
+				winningCardIndex = i;
+			}
+		}
+	}
+
+	while (winningCardIndex > 0)
+	{
+		--winningCardIndex;
+		playerIndex = getNextPlayerIndex(playerIndex);
+	}
+
+	return m_players[playerIndex].get();
+}
+
+const Card* Belote::getTrickHighestTrumpPlayed() const
+{
+	if (m_currentTrickCards.empty())
+	{
+		return nullptr;
+	}
+
+	const Card* winnigCard = m_currentTrickCards[0];
+	size_t winningCardIndex = 0;
+	for (size_t i = 1; i < m_currentTrickCards.size(); ++i)
+	{
+		const Card* card = m_currentTrickCards[i];
+		if (isTrumpSuit(winnigCard->getSuit(), m_contract))
+		{
+			if (card->getSuit() == winnigCard->getSuit() && trumpRankCompare(card->getRank(), winnigCard->getRank()) == 1)
+			{
+				winnigCard = card;
+				winningCardIndex = i;
+			}
+		}
+		else
+		{
+			if (card->getSuit() == winnigCard->getSuit() && noTrumpRankCompare(card->getRank(), winnigCard->getRank()) == 1 ||
+				isTrumpSuit(card->getSuit(), m_contract))
+			{
+				winnigCard = card;
+				winningCardIndex = i;
+			}
+		}
+	}
+	if (isTrumpSuit(winnigCard->getSuit(), m_contract))
+	{
+		return winnigCard;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 void Belote::enterState(BeloteState state)
@@ -590,12 +706,20 @@ void Belote::updatePlayCardPhase()
 
 void Belote::enterCollectTrickCardsAndUpdate()
 {
+	static_cast<Subject<NotifyEndOfTrick>&>(*Application::getInstance()).notifyObservers(NotifyEndOfTrick());
 	m_currentTrickCards.clear(); // TODO: cards have to be moved somewhere
 }
 
 void Belote::updateCollectTrickCardsAndUpdate()
 {
-
+	if (getActivePlayer().getCards().empty())
+	{
+		enterState(BeloteState::CalculateEndOfRoundScore);
+	}
+	else
+	{
+		enterState(BeloteState::PlayCard);
+	}
 }
 
 /*

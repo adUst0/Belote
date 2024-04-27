@@ -22,3 +22,8 @@ struct NotifyCardAboutToBePlayed
 	const Card& m_card;
 };
 
+
+struct NotifyEndOfTrick
+{
+
+};

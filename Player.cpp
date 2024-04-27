@@ -39,7 +39,8 @@ void Player::setPlayCardRequired()
 	if (!m_isHuman)
 	{
 		const Card* card = DummyAI::chooseCardToPlay(*this);
-		assert(card && m_belote->isValidCardToPlay(*card));
+		const bool validMove = card && m_belote->isValidCardToPlay(*card);
+		assert(validMove);
 		m_belote->playCard(*card);
 		m_cards.erase(std::find(m_cards.begin(), m_cards.end(), card));
 		m_playCardRequired = false;

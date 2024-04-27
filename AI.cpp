@@ -25,11 +25,21 @@ const Card* DummyAI::chooseCardToPlay(const Player& player)
 		return nullptr;
 	}
 
-	const Card* card = nullptr;
-	size_t iterations = 0;
-	do
+	//const Card* card = nullptr;
+	//size_t iterations = 0;
+	//do
+	//{
+	//	card = player.getCards()[Utils::randRanged(0, player.getCards().size() - 1)];
+	//} while (!player.getBelote()->isValidCardToPlay(*card) && iterations++ < MAX_ITERATIONS);
+	//return card;
+
+	for (const Card* card : player.getCards())
 	{
-		card = player.getCards()[Utils::randRanged(0, player.getCards().size() - 1)];
-	} while (!player.getBelote()->isValidCardToPlay(*card) && iterations++ < MAX_ITERATIONS);
-	return card;
+		if (player.getBelote()->isValidCardToPlay(*card))
+		{
+			return card;
+		}
+	}
+
+	return player.getCards()[0];
 }

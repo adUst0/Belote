@@ -37,6 +37,12 @@
     <Filter Include="Source Files\States">
       <UniqueIdentifier>{46ee9184-109b-4c2f-8f59-fc186dc89d65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\UI">
+      <UniqueIdentifier>{ea4f36b6-ba2f-4175-bece-4f18bbd3aa3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\UI">
+      <UniqueIdentifier>{f1881432-0999-44f5-a18c-99cf1a934d79}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -78,11 +84,14 @@
     <ClCompile Include="SplashState.cpp">
       <Filter>Source Files\States</Filter>
     </ClCompile>
-    <ClCompile Include="UIComponent.cpp">
-      <Filter>Source Files\Engine</Filter>
-    </ClCompile>
     <ClCompile Include="UIState.cpp">
       <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="UIComponent.cpp">
+      <Filter>Source Files\Engine\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UIManager.cpp">
+      <Filter>Source Files\Engine\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -125,11 +134,14 @@
     <ClInclude Include="ObserverMessages.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="UIManager.h">
+      <Filter>Header Files\Engine\UI</Filter>
+    </ClInclude>
     <ClInclude Include="UIComponent.h">
-      <Filter>Header Files\Engine</Filter>
+      <Filter>Header Files\Engine\UI</Filter>
     </ClInclude>
     <ClInclude Include="UIState.h">
-      <Filter>Header Files\Engine</Filter>
+      <Filter>Header Files\Engine\UI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

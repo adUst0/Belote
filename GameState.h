@@ -15,6 +15,7 @@ class GameState
 	, public Observer<NotifyCardDealing>
 	, public Observer<NotifyContractVote>
 	, public Observer<NotifyCardAboutToBePlayed>
+	, public Observer<NotifyEndOfTrick>
 {
 public:
 	GameState(StateMachine& stateMachine);
@@ -26,6 +27,7 @@ public:
 	virtual void					notify(const NotifyCardDealing& data) override;
 	virtual void					notify(const NotifyContractVote& data) override;
 	virtual void					notify(const NotifyCardAboutToBePlayed& data) override;
+	virtual void					notify(const NotifyEndOfTrick& data) override;
 
 	void							delayGame(float seconds);
 	void							togglePause();
