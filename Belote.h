@@ -35,8 +35,8 @@ public:
 	enum class BeloteState : int8_t
 	{
 		StartNewGame = 0,
-		DealCardsToActivePlayer,
 		ChooseContract,
+		DealCardsToActivePlayer,
 		PlayCard, // One trick consists of all players playing a card
 		CollectTrickCardsAndUpdate,
 		CalculateEndOfRoundScore, // One round consists of 8 tricks
@@ -60,6 +60,8 @@ public:
 
 	size_t										getNextPlayerIndex(size_t current = -1/*default is active player*/) const;
 	size_t										getPreviousPlayerIndex(size_t current = -1/*default is active player*/) const;
+
+	size_t										getDealingPlayerIndex() const { return m_dealingPlayerIndex; }
 	
 	const Player&								getNextPlayer() const { return *m_players[getNextPlayerIndex()]; }
 	Player&										getNextPlayer() { return *m_players[getNextPlayerIndex()]; }
@@ -78,8 +80,15 @@ public:
 
 	const std::vector<const Card*>&				getCurrentTrickCards() const { return m_currentTrickCards; }
 
+	int											getTeamScore(int teamIndex) const { return m_teamTotalScore[teamIndex]; }
+
 	void										enterState(BeloteState state);
 	void										updateState();
+
+	// TODO: this needs to be reworked for double/redouble
+	Contract									getContract() const { return m_contract; }
+	const Player*								getContractPlayer() const { getLastNonPassContractVote(true).m_player; } // todo: very bad name
+
 
 private:
 
@@ -88,6 +97,10 @@ private:
 
 	ContractVoteData							getLastNonPassContractVote(bool ignoreDouble = true) const;
 	Contract									decideContractFromVotes() const;
+
+	int											calculateEndOfRoundScoreFromCards(size_t teamIndex) const;
+
+	bool										isGameOver() const;
 
 	// Belote States. This can be implemented using the StateMachine class but it would be overkill for now
 	void										enterStartNewGameState();
@@ -105,6 +118,12 @@ private:
 	void										enterCollectTrickCardsAndUpdate();
 	void										updateCollectTrickCardsAndUpdate();
 
+	void										enterCalculateEndOfRoundScore();
+	void										updateCalculateEndOfRoundScore();
+
+	void										enterGameOver();
+	void										updateGameOver();
+
 	BeloteState									m_state = BeloteState::GameOver;
 
 
@@ -113,12 +132,22 @@ private:
 
 	std::vector<const Card*>					m_currentTrickCards;
 
-	size_t										m_dealingPlayerIndex = 0;
+	size_t										m_dealingPlayerIndex = 3;
 	size_t										m_activePlayerIndex = 0;
 
 
 	std::vector<Contract>						m_contractVotes;
 	Contract									m_contract = Contract::Num;
+
+	struct RoundScore
+	{
+		std::vector<const Card*> m_teamCollectedCardsThisRound[2];
+		size_t m_lastTrickWinningTeam = 0;
+	};
+
+	RoundScore									m_roundScore;
+
+	int											m_teamTotalScore[2];
 
 	static std::vector<std::unique_ptr<Card>>	s_cards;
 };

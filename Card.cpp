@@ -3,6 +3,7 @@
 #include <array>
 #include <format>
 #include <string>
+#include <cassert>
 
 namespace
 {
@@ -49,4 +50,30 @@ Card::Card(Suit suit, Rank rank)
 	, m_rank(rank)
 	, m_toString(std::format("Card {} {}", stringFromSuit(suit), stringFromRank(rank)))
 {
+}
+
+int Card::getScore(bool isTrump) const
+{
+	switch (m_rank)
+	{
+	case Rank::Ace:
+		return 11;
+	case Rank::Seven:
+	case Rank::Eight:
+		return 0;
+	case Rank::Nine:
+		return isTrump ? 14 : 0;
+	case Rank::Ten:
+		return 10;
+	case Rank::Jack:
+		return isTrump ? 20 : 2;
+	case Rank::Queen:
+		return 3;
+	case Rank::King:
+		return 4;
+	default:
+		assert(false);
+		return -1;
+		break;
+	}
 }

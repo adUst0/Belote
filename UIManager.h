@@ -16,6 +16,8 @@ public:
 	UIComponent*			getOrCreateComponent(const std::string& key);
 	UIComponent*			getComponent(const std::string& key);
 
+	void					renderOnTop(const UIComponent* component);
+
 protected:
 	std::vector<std::unique_ptr<UIComponent>>	m_components;
 };

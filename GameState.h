@@ -6,16 +6,18 @@
 #include "Belote.h"
 #include "Observer.h"
 #include "ObserverMessages.h"
-#include "UIState.h"
+#include "UIManager.h"
 
 class UIComponent;
 
 class GameState
-	: public UIState
+	: public BaseState
+	, public UIManager
 	, public Observer<NotifyCardDealing>
 	, public Observer<NotifyContractVote>
 	, public Observer<NotifyCardAboutToBePlayed>
 	, public Observer<NotifyEndOfTrick>
+	, public Observer<NotifyEndOfRound>
 {
 public:
 	GameState(StateMachine& stateMachine);
@@ -28,6 +30,7 @@ public:
 	virtual void					notify(const NotifyContractVote& data) override;
 	virtual void					notify(const NotifyCardAboutToBePlayed& data) override;
 	virtual void					notify(const NotifyEndOfTrick& data) override;
+	virtual void					notify(const NotifyEndOfRound& data) override;
 
 	void							delayGame(float seconds);
 	void							togglePause();
@@ -37,7 +40,7 @@ private:
 	void											createCardSprites();
 	void											createPlayerNames();
 
-	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder) const;
+	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder, int numCards) const;
 	sf::Vector2f									getCardPositionOnTable(const Player& player) const;
 
 	std::string										getPlayerName(const Player& player) const;

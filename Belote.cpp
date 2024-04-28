@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "Utils.h"
 #include "Application.h"
+#include <cmath>
 
 bool isTrumpSuit(Suit suit, Contract currentContract)
 {
@@ -208,7 +209,7 @@ Belote::Belote()
 
 	for (int playerIndex = 0; playerIndex < 4; playerIndex++)
 	{
-		const int teamIndex = playerIndex % 2 != 0 ? 0 : 1;
+		const int teamIndex = playerIndex % 2 == 0 ? 0 : 1;
 		m_players.emplace_back(std::make_unique<Player>(teamIndex, playerIndex, *this));
 	}
 
@@ -218,6 +219,8 @@ Belote::Belote()
 	}
 	// Shuffle cards only for the first game
 	std::shuffle(m_deck.begin(), m_deck.end(), std::default_random_engine((unsigned int)std::chrono::system_clock::now().time_since_epoch().count()));
+
+	m_teamTotalScore[0] = m_teamTotalScore[1] = 0;
 
 	enterState(BeloteState::StartNewGame);
 }
@@ -322,7 +325,7 @@ bool Belote::isValidCardToPlay(const Card& card) const
 			}
 			);
 
-			return trumpRankCompare(card.getRank(), firstCard->getRank()) == 1 || !hasHigherRank;
+			return trumpRankCompare(card.getRank(), winnigCard->getRank()) == 1 || !hasHigherRank;
 		}
 
 		return true;
@@ -480,8 +483,10 @@ void Belote::enterState(BeloteState state)
 		enterCollectTrickCardsAndUpdate();
 		break;
 	case Belote::BeloteState::CalculateEndOfRoundScore:
+		enterCalculateEndOfRoundScore();
 		break;
 	case Belote::BeloteState::GameOver:
+		enterGameOver();
 		break;
 	case Belote::BeloteState::Num:
 		break;
@@ -512,8 +517,10 @@ void Belote::updateState()
 		updateCollectTrickCardsAndUpdate();
 		break;
 	case Belote::BeloteState::CalculateEndOfRoundScore:
+		updateCalculateEndOfRoundScore();
 		break;
 	case Belote::BeloteState::GameOver:
+		updateGameOver();
 		break;
 	case Belote::BeloteState::Num:
 		break;
@@ -578,6 +585,30 @@ Contract Belote::decideContractFromVotes() const
 	}
 
 	return m_contractVotes[m_contractVotes.size() - 4];
+}
+
+int Belote::calculateEndOfRoundScoreFromCards(size_t teamIndex) const
+{
+	int score = 0;
+
+	for (const Card* card : m_roundScore.m_teamCollectedCardsThisRound[teamIndex])
+	{
+		score += card->getScore(isTrumpSuit(card->getSuit(), m_contract));
+	}
+
+	if (m_roundScore.m_lastTrickWinningTeam == teamIndex)
+	{
+		score += 10;
+	}
+
+	// TODO: Declarations not implemented yet
+
+	return m_contract == Contract::NoTrumps ? score * 2 : score;
+}
+
+bool Belote::isGameOver() const
+{
+	return m_teamTotalScore[0] >= 151 || m_teamTotalScore[1] >= 151;
 }
 
 void Belote::enterStartNewGameState()
@@ -707,7 +738,16 @@ void Belote::updatePlayCardPhase()
 void Belote::enterCollectTrickCardsAndUpdate()
 {
 	static_cast<Subject<NotifyEndOfTrick>&>(*Application::getInstance()).notifyObservers(NotifyEndOfTrick());
-	m_currentTrickCards.clear(); // TODO: cards have to be moved somewhere
+
+	const size_t winningTeamIndex = getCurrentPlayerWinningTrick()->getTeamIndex();
+	m_roundScore.m_teamCollectedCardsThisRound[winningTeamIndex].insert(m_roundScore.m_teamCollectedCardsThisRound[winningTeamIndex].end(), m_currentTrickCards.begin(), m_currentTrickCards.end());
+	m_roundScore.m_lastTrickWinningTeam = winningTeamIndex;
+
+	m_activePlayerIndex = getCurrentPlayerWinningTrick()->getPlayerIndex();
+
+	m_currentTrickCards.clear();
+
+	Utils::log("enterCollectTrickCardsAndUpdate: winning team = {}\n", winningTeamIndex);
 }
 
 void Belote::updateCollectTrickCardsAndUpdate()
@@ -720,6 +760,55 @@ void Belote::updateCollectTrickCardsAndUpdate()
 	{
 		enterState(BeloteState::PlayCard);
 	}
+}
+
+void Belote::enterCalculateEndOfRoundScore()
+{
+	for (size_t teamIndex = 0; teamIndex < 2; ++teamIndex)
+	{
+		int ceilingPoint = m_contract == Contract::AllTrumps ? 4 : (m_contract == Contract::NoTrumps ? 5 : 6);
+
+		const auto scoreFromCards = calculateEndOfRoundScoreFromCards(teamIndex);
+		const auto score = (scoreFromCards % 10 >= ceilingPoint) ? std::ceil(scoreFromCards / 10.f) : std::floor(scoreFromCards / 10.f);
+
+		Utils::log("End of Round score for Team {} is: {}\n", teamIndex, score);
+
+		m_teamTotalScore[teamIndex] += score;
+	}
+
+	// TODO: Vytre i kontra/rekontra
+}
+
+void Belote::updateCalculateEndOfRoundScore()
+{
+	if (!isGameOver())
+	{
+		m_dealingPlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
+		m_activePlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
+
+		m_deck.insert(m_deck.end(), m_roundScore.m_teamCollectedCardsThisRound[0].begin(), m_roundScore.m_teamCollectedCardsThisRound[0].end());
+		m_deck.insert(m_deck.end(), m_roundScore.m_teamCollectedCardsThisRound[1].begin(), m_roundScore.m_teamCollectedCardsThisRound[1].end());
+		m_roundScore.m_teamCollectedCardsThisRound[0].clear();
+		m_roundScore.m_teamCollectedCardsThisRound[1].clear();
+
+		enterState(BeloteState::DealCardsToActivePlayer);
+
+		static_cast<Subject<NotifyEndOfRound>&>(*Application::getInstance()).notifyObservers(NotifyEndOfRound());
+	}
+	else
+	{
+		enterState(BeloteState::GameOver);
+	}
+}
+
+void Belote::enterGameOver()
+{
+	Utils::log("GAME OVER: winning team is {}", m_teamTotalScore[0] > m_teamTotalScore[1] ? 0 : 1);
+}
+
+void Belote::updateGameOver()
+{
+	// TODO: start new game
 }
 
 /*

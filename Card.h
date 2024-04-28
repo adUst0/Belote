@@ -44,6 +44,8 @@ public:
 
 	const std::string&				toString() const { return m_toString; }
 
+	int								getScore(bool isTrump) const;
+
 private:
 	Suit							m_suit;
 	Rank							m_rank;

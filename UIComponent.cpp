@@ -49,6 +49,12 @@ void UIComponent::setOriginCenter(bool value)
 	updateOrigin();
 }
 
+void UIComponent::setOriginTopCenter(bool value)
+{
+	m_isOriginTopCenter = value;
+	updateOrigin();
+}
+
 void UIComponent::setPosition(const sf::Vector2f& position, bool cancelCurrentMoveAnimation /*= true*/)
 {
 	if (cancelCurrentMoveAnimation && m_moveAnimation)
@@ -68,6 +74,21 @@ void UIComponent::setPosition(const sf::Vector2f& position, bool cancelCurrentMo
 	for (sf::Sprite& sprite : m_sprites)
 	{
 		sprite.setPosition(position);
+	}
+}
+
+void UIComponent::setRotation(float rotation)
+{
+	if (m_background)
+	{
+		m_background->setRotation(rotation);
+	}
+
+	m_text.setRotation(rotation);
+
+	for (sf::Sprite& sprite : m_sprites)
+	{
+		sprite.setRotation(rotation);
 	}
 }
 
@@ -210,7 +231,7 @@ void UIComponent::updateOrigin()
 	if (m_isOriginCenter)
 	{
 		const sf::FloatRect textBounds = m_text.getLocalBounds();
-		m_text.setOrigin({ textBounds.width / 2.f, textBounds.height / 2.f + textBounds.top });
+		m_text.setOrigin({ textBounds.width / 2.f + textBounds.left, textBounds.height / 2.f + textBounds.top });
 	
 		for (sf::Sprite& sprite : m_sprites)
 		{
@@ -222,6 +243,23 @@ void UIComponent::updateOrigin()
 		{
 			const sf::FloatRect bgBounds = m_background->getLocalBounds();
 			m_background->setOrigin({ bgBounds.width / 2.f + bgBounds.left, bgBounds.height / 2.f + bgBounds.top });
+		}
+	}
+	else if (m_isOriginTopCenter)
+	{
+		const sf::FloatRect textBounds = m_text.getLocalBounds();
+		m_text.setOrigin({ textBounds.width / 2.f, textBounds.top });
+
+		for (sf::Sprite& sprite : m_sprites)
+		{
+			const sf::FloatRect spriteBounds = sprite.getLocalBounds();
+			sprite.setOrigin({ spriteBounds.width / 2.f, 0.f });
+		}
+
+		if (m_background)
+		{
+			const sf::FloatRect bgBounds = m_background->getLocalBounds();
+			m_background->setOrigin({ bgBounds.width / 2.f + bgBounds.left, bgBounds.top });
 		}
 	}
 }

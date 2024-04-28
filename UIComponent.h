@@ -18,8 +18,10 @@ public:
 	void								setBackground(const sf::Color& color);
 
 	void								setOriginCenter(bool value);
+	void								setOriginTopCenter(bool value);
 
 	void								setPosition(const sf::Vector2f& position, bool cancelCurrentMoveAnimation = true);
+	void								setRotation(float rotation);
 	void								moveToPosition(const sf::Vector2f& targetPosition, float animationTime = 0.5f);
 	bool								isMoving() const { return m_moveAnimation != nullptr; }
 
@@ -75,6 +77,7 @@ private:
 
 	bool								m_isVisible = true;
 	bool								m_isOriginCenter = false;
+	bool								m_isOriginTopCenter = false;
 
 	bool								m_isMouseOver = false;
 

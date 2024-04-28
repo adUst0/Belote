@@ -26,4 +26,14 @@ SplashState::SplashState(StateMachine& stateMachine)
 	startButtonHover->setPosition((sf::Vector2f)Application::getInstance()->getWindow().getSize() / 2.f);
 
 	startButton->setHoverState(std::move(startButtonHover));
+
+	UIComponent* title = getOrCreateComponent("title");
+	title->setText("Belote (Bulgarian rules)", sf::Color(3, 23, 8), 72);
+	title->setOriginCenter(true);
+	title->setPosition({Application::getInstance()->getWindow().getSize().x / 2.f, 100.f});
+
+	UIComponent* author = getOrCreateComponent("author");
+	author->setText("Author: Boris Ivanov", sf::Color::Black, 30);
+	author->setOriginCenter(true);
+	author->setPosition({ Application::getInstance()->getWindow().getSize().x / 2.f, 150.f });
 }

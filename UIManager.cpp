@@ -1,4 +1,5 @@
 #include "UIManager.h"
+#include <cassert>
 
 void UIManager::handleInputEvent(const sf::Event& event)
 {
@@ -59,4 +60,16 @@ UIComponent* UIManager::getComponent(const std::string& key)
 {
 	auto iter = std::find_if(m_components.begin(), m_components.end(), [&key](auto& ptr) { return ptr->getKey() == key; });
 	return iter != m_components.end() ? (*iter).get() : nullptr;
+}
+
+void UIManager::renderOnTop(const UIComponent* component)
+{
+	auto it = std::find_if(m_components.begin(), m_components.end(), [component](auto& ptr) { return component == ptr.get(); });
+	if (it == m_components.end())
+	{
+		assert(false);
+		return;
+	}
+
+	std::rotate(it, it + 1, m_components.end());
 }

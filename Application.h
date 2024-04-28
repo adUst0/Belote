@@ -13,6 +13,7 @@ class Application
 	, public Subject<NotifyContractVote>
 	, public Subject<NotifyCardAboutToBePlayed>
 	, public Subject<NotifyEndOfTrick>
+	, public Subject<NotifyEndOfRound>
 {
 public:
 	Application(unsigned int width, unsigned int height, const std::string& title);
