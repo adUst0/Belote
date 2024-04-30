@@ -8,12 +8,14 @@ namespace
 
 Contract DummyAI::chooseContractVote(const Player& player)
 {
-	Contract contract;
+	Contract contract(Contract::Type::Pass, &player);
 	size_t iterations = 0;
 	do
 	{
-		contract = Contract(Utils::randRanged(0, (int8_t)Contract::AllTrumps));
-	} while (!player.getBelote()->isValidContractVote(contract) && iterations++ < MAX_ITERATIONS);
+		auto contractType = Contract::Type(Utils::randRanged(0, (int8_t)Contract::Type::AllTrumps));
+		contract = { contractType , &player };
+
+	} while (!player.getBelote()->getCurrentRound().getBiddingManager().canBid(contract) && iterations++ < MAX_ITERATIONS);
 
 	return contract;
 }
@@ -25,17 +27,9 @@ const Card* DummyAI::chooseCardToPlay(const Player& player)
 		return nullptr;
 	}
 
-	//const Card* card = nullptr;
-	//size_t iterations = 0;
-	//do
-	//{
-	//	card = player.getCards()[Utils::randRanged(0, player.getCards().size() - 1)];
-	//} while (!player.getBelote()->isValidCardToPlay(*card) && iterations++ < MAX_ITERATIONS);
-	//return card;
-
 	for (const Card* card : player.getCards())
 	{
-		if (player.getBelote()->isValidCardToPlay(*card))
+		if (player.getBelote()->getCurrentRound().getCurrentTrick().canPlayCard(*card))
 		{
 			return card;
 		}

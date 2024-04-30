@@ -93,6 +93,18 @@
     <ClCompile Include="UIManager.cpp">
       <Filter>Source Files\Engine\UI</Filter>
     </ClCompile>
+    <ClCompile Include="Contract.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="BiddingManager.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Trick.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Round.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h">
@@ -142,6 +154,18 @@
     </ClInclude>
     <ClInclude Include="UIState.h">
       <Filter>Header Files\Engine\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Contract.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="BiddingManager.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Trick.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Round.h">
+      <Filter>Header Files\Game</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 #include "GameState.h"
 #include "Application.h"
 #include "UIComponent.h"
+#include "Contract.h"
 
 namespace
 {
@@ -249,7 +250,7 @@ void GameState::notify(const NotifyContractVote& data)
 	//}
 
 	UIComponent* component = getOrCreateComponent(std::format("player_{}", data.m_player.getPlayerIndex()));
-	component->setText(component->getText() + " " + contractToString(data.m_contract));
+	component->setText(component->getText() + " " + data.m_contract.toString());
 
 	delayGame(WAIT_TIME_AFTER_BIDDING);
 }
@@ -270,9 +271,9 @@ void GameState::notify(const NotifyCardAboutToBePlayed& data)
 	delayGame(WAIT_TIME_AFTER_PLAYING);
 }
 
-void GameState::notify(const NotifyEndOfTrick& /*data*/)
+void GameState::notify(const NotifyEndOfTrick& data)
 {
-	for (const Card* card : m_belote.getCurrentTrickCards())
+	for (const Card* card : data.m_trick.getCards())
 	{
 		getComponent(card->toString())->setVisible(false);
 	}

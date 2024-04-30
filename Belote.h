@@ -5,27 +5,13 @@
 #include "StateMachine.h"
 #include <array>
 #include "Player.h"
+#include "BiddingManager.h"
+#include "Round.h"
 
-// TODO: Implement card ownership with unique_ptr to enforce that the card really transfers ownership
-
-// TODO: Contract can go into a class
-enum class Contract : int8_t
-{
-	Pass = 0,
-	Clubs,
-	Diamonds,
-	Hearts,
-	Spades,
-	NoTrumps,
-	AllTrumps,
-	Double,
-	Redouble,
-	Num,
-};
-
-bool isTrumpSuit(Suit suit, Contract currentContract);
-
-std::string contractToString(Contract contract);
+/* TODOs
+* Implement card ownership with unique_ptr to enforce that the card really transfers ownership
+* Round score bug: ceiling is incorrect. Got 19-8 score for all trumps
+*/
 
 class Belote
 {
@@ -44,63 +30,37 @@ public:
 		Num
 	};
 
-	struct ContractVoteData
-	{
-		Contract m_vote = Contract::Num;
-		Player* m_player = nullptr;
-	};
-
 	const std::vector<std::unique_ptr<Player>>& getPlayers() const { return m_players; }
-	const std::vector<const Card*>&				getDeck() const { return m_deck;}
-	void										returnCardToDeck(const Card& card) { m_deck.push_back(&card); }
+
+	size_t										getDealingPlayerIndex() const { return m_dealingPlayerIndex; }
 
 	size_t										getActivePlayerIndex() const { return m_activePlayerIndex; }
 	const Player&								getActivePlayer() const { return *m_players[m_activePlayerIndex]; }
 	Player&										getActivePlayer() { return *m_players[m_activePlayerIndex]; }
 
 	size_t										getNextPlayerIndex(size_t current = -1/*default is active player*/) const;
-	size_t										getPreviousPlayerIndex(size_t current = -1/*default is active player*/) const;
-
-	size_t										getDealingPlayerIndex() const { return m_dealingPlayerIndex; }
-	
 	const Player&								getNextPlayer() const { return *m_players[getNextPlayerIndex()]; }
 	Player&										getNextPlayer() { return *m_players[getNextPlayerIndex()]; }
 
-	const std::vector<Contract>&				getContractVotes() const { return m_contractVotes; }
-	void										voteForContract(Contract contract);
-	bool										isValidContractVote(Contract vote) const;
+	size_t										getPreviousPlayerIndex(size_t current = -1/*default is active player*/) const;
 
-	bool										isValidCardToPlay(const Card& card) const;
-	//std::vector<const Card*>					getValidCardsToPlay()
-	void										playCard(const Card& card);
-
-	// Trick functions
-	const Player*								getCurrentPlayerWinningTrick() const;
-	const Card*									getTrickHighestTrumpPlayed() const;
-
-	const std::vector<const Card*>&				getCurrentTrickCards() const { return m_currentTrickCards; }
+	const std::vector<const Card*>&				getDeck() const { return m_deck;}
+	void										returnCardToDeck(const Card& card) { m_deck.push_back(&card); }
+	
+	Round&										getCurrentRound() { return *m_rounds.back(); }
+	const Round&								getCurrentRound() const { return *m_rounds.back(); }
 
 	int											getTeamScore(int teamIndex) const { return m_teamTotalScore[teamIndex]; }
 
 	void										enterState(BeloteState state);
 	void										updateState();
 
-	// TODO: this needs to be reworked for double/redouble
-	Contract									getContract() const { return m_contract; }
-	const Player*								getContractPlayer() const { getLastNonPassContractVote(true).m_player; } // todo: very bad name
-
-
 private:
 
 	void										cutDeck();
 	void										dealCardsToPlayer(Player& player, int numCards);
-
-	ContractVoteData							getLastNonPassContractVote(bool ignoreDouble = true) const;
-	Contract									decideContractFromVotes() const;
-
-	int											calculateEndOfRoundScoreFromCards(size_t teamIndex) const;
-
 	bool										isGameOver() const;
+	void										createNewRound();
 
 	// Belote States. This can be implemented using the StateMachine class but it would be overkill for now
 	void										enterStartNewGameState();
@@ -126,26 +86,13 @@ private:
 
 	BeloteState									m_state = BeloteState::GameOver;
 
-
 	std::vector<const Card*>					m_deck;
 	std::vector<std::unique_ptr<Player>>		m_players;
-
-	std::vector<const Card*>					m_currentTrickCards;
 
 	size_t										m_dealingPlayerIndex = 3;
 	size_t										m_activePlayerIndex = 0;
 
-
-	std::vector<Contract>						m_contractVotes;
-	Contract									m_contract = Contract::Num;
-
-	struct RoundScore
-	{
-		std::vector<const Card*> m_teamCollectedCardsThisRound[2];
-		size_t m_lastTrickWinningTeam = 0;
-	};
-
-	RoundScore									m_roundScore;
+	std::vector<std::unique_ptr<Round>>			m_rounds;
 
 	int											m_teamTotalScore[2];
 

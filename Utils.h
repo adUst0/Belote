@@ -35,5 +35,7 @@ namespace Utils
 
 		return *iter;
 	}
+
+	void crashGame();
 };
 

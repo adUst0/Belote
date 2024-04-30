@@ -2,7 +2,9 @@
 
 class Player;
 class Card;
-enum class Contract : int8_t;
+class Contract;
+class Trick;
+class Round;
 
 struct NotifyCardDealing
 {
@@ -25,10 +27,10 @@ struct NotifyCardAboutToBePlayed
 
 struct NotifyEndOfTrick
 {
-
+	const Trick& m_trick;
 };
 
 struct NotifyEndOfRound
 {
-
+	const Round& m_round;
 };

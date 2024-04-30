@@ -14,6 +14,8 @@ public:
 	const std::vector<const Card*>&				getCards() const { return m_cards; }
 	void										returnCards();
 
+	bool										hasSuit(Suit suit) const;
+
 	int											getTeamIndex() const { return m_teamIndex; }
 	int											getPlayerIndex() const { return m_playerIndex; }
 

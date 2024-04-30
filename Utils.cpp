@@ -10,3 +10,8 @@ int Utils::randRanged(int min, int max)
 	}
 	return min + rand() % ((max + 1) - min);
 }
+
+void Utils::crashGame()
+{
+	*(unsigned int*)0 = 0xDEADBEAF;
+}

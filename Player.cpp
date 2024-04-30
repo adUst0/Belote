@@ -19,15 +19,24 @@ void Player::returnCards()
 	}
 }
 
+bool Player::hasSuit(Suit suit) const
+{
+	return std::any_of(
+		getCards().begin(), 
+		getCards().end(), 
+		[suit](const Card* card) { return card->getSuit() == suit; }
+	);
+}
+
 void Player::setContractVoteRequired()
 {
 	m_contractVoteRequired = true;
 
 	if (!m_isHuman)
 	{
-		const Contract vote = DummyAI::chooseContractVote(*this);
-		assert(m_belote->isValidContractVote(vote));
-		m_belote->voteForContract(vote);
+		Contract vote = DummyAI::chooseContractVote(*this);
+		assert(m_belote->getCurrentRound().getBiddingManager().canBid(vote));
+		m_belote->getCurrentRound().getBiddingManager().bid(std::move(vote));
 		m_contractVoteRequired = false;
 	}
 }
@@ -39,9 +48,9 @@ void Player::setPlayCardRequired()
 	if (!m_isHuman)
 	{
 		const Card* card = DummyAI::chooseCardToPlay(*this);
-		const bool validMove = card && m_belote->isValidCardToPlay(*card);
+		const bool validMove = card && m_belote->getCurrentRound().getCurrentTrick().canPlayCard(*card);
 		assert(validMove);
-		m_belote->playCard(*card);
+		m_belote->getCurrentRound().getCurrentTrick().playCard(*card);
 		m_cards.erase(std::find(m_cards.begin(), m_cards.end(), card));
 		m_playCardRequired = false;
 	}
