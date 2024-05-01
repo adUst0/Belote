@@ -1,7 +1,8 @@
 #include "AssetManager.h"
 
-AssetManager::AssetManager()
+void AssetManager::initializeDefaultAssets()
 {
+	// Don't do this in the constructor because it happens before a sf::RenderWindow is created and triggers an OpenGL error
 	loadTexture("MissingTexture", "assets/missing_texture.png");
 	loadFont("DefaultFont", "assets/fonts/arial.ttf");
 }

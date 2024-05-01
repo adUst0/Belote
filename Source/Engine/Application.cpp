@@ -12,6 +12,8 @@ Application::Application(unsigned int width, unsigned int height, const std::str
 
 	m_window.create(sf::VideoMode(width, height), title);
 	m_window.setFramerateLimit(60u);
+
+	m_assetManager.initializeDefaultAssets();
 }
 
 void Application::run()

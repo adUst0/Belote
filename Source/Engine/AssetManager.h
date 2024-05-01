@@ -8,7 +8,9 @@
 class AssetManager
 {
 public:
-	AssetManager();
+	AssetManager() = default;
+
+	void							initializeDefaultAssets();
 
 	void							loadTexture(const std::string& id, const std::string& fileName);
 	const sf::Texture&				getTexture(const std::string& id) const;
