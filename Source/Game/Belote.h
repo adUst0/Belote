@@ -54,6 +54,7 @@ public:
 
 	void										enterState(BeloteState state);
 	void										updateState();
+	std::string									getStateString() const;
 
 private:
 

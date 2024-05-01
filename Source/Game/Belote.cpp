@@ -11,31 +11,6 @@
 
 namespace
 {
-	std::string beloteStateToString(Belote::BeloteState state)
-	{
-		switch (state)
-		{
-		case Belote::BeloteState::StartNewGame:
-			return "StartNewGame";
-		case Belote::BeloteState::DealCardsToActivePlayer:
-			return "DealCardsToActivePlayer";
-		case Belote::BeloteState::ChooseContract:
-			return "ChooseContract";
-		case Belote::BeloteState::PlayCard:
-			return "PlayTrick";
-		case Belote::BeloteState::CollectTrickCardsAndUpdate:
-			return "CollectTrickCardsAndUpdate";
-		case Belote::BeloteState::CalculateEndOfRoundScore:
-			return "CalculateEndOfRoundScore";
-		case Belote::BeloteState::GameOver:
-			return "GameOver";
-		case Belote::BeloteState::Num:
-			return "Num - INVALID";
-		default:
-			return "Missing string for state in operator<<";
-		}
-	}
-
 	bool isRankAllowedInBelote(Rank rank)
 	{
 		switch (rank)
@@ -115,7 +90,7 @@ size_t Belote::getPreviousPlayerIndex(size_t current /*= -1/*default is active p
 void Belote::enterState(BeloteState state)
 {
 	m_state = state;
-	Utils::log("ENTER {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
+	Utils::log("ENTER {}. ActivePlayer is {} ({})\n", getStateString(), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (state)
 	{
@@ -149,7 +124,7 @@ void Belote::enterState(BeloteState state)
 
 void Belote::updateState()
 {
-	Utils::log("UPDATE {}. ActivePlayer is {} ({})\n", beloteStateToString(m_state), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
+	Utils::log("UPDATE {}. ActivePlayer is {} ({})\n", getStateString(), m_activePlayerIndex, getActivePlayer().isHuman() ? "human" : "AI");
 
 	switch (m_state)
 	{
@@ -181,6 +156,31 @@ void Belote::updateState()
 	}
 }
 
+std::string Belote::getStateString() const
+{
+	switch (m_state)
+	{
+	case Belote::BeloteState::StartNewGame:
+		return "StartNewGame";
+	case Belote::BeloteState::DealCardsToActivePlayer:
+		return "DealCardsToActivePlayer";
+	case Belote::BeloteState::ChooseContract:
+		return "ChooseContract";
+	case Belote::BeloteState::PlayCard:
+		return "PlayTrick";
+	case Belote::BeloteState::CollectTrickCardsAndUpdate:
+		return "CollectTrickCardsAndUpdate";
+	case Belote::BeloteState::CalculateEndOfRoundScore:
+		return "CalculateEndOfRoundScore";
+	case Belote::BeloteState::GameOver:
+		return "GameOver";
+	case Belote::BeloteState::Num:
+		return "Num - INVALID";
+	default:
+		return "Missing string for state in operator<<";
+	}
+}
+
 void Belote::cutDeck()
 {
 	// TODO
@@ -207,6 +207,7 @@ bool Belote::isGameOver() const
 void Belote::createNewRound()
 {
 	m_rounds.emplace_back(std::make_unique<Round>(this));
+	static_cast<Subject<NotifyNewRound>&>(*Application::getInstance()).notifyObservers(NotifyNewRound(getCurrentRound()));
 }
 
 void Belote::enterStartNewGameState()

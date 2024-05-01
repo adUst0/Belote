@@ -8,9 +8,6 @@ namespace
 	struct PlayerPosition
 	{
 		sf::Vector2f m_position;
-		//bool m_isHorizontallyCentered = false;
-		//bool m_isReversedDirection = false;
-
 		enum {Vertical, Horizontal} m_direction;
 	};
 
@@ -41,6 +38,13 @@ namespace
 		{SCREEN_CENTER.x, SCREEN_HEIGHT - SCREEN_PADDING}, // bottom
 		{SCREEN_WIDTH - SCREEN_PADDING * 3 - CARD_WIDTH, SCREEN_CENTER.y}, // right
 		{SCREEN_CENTER.x, SCREEN_PADDING}, // up
+	};
+
+	static const sf::Vector2f			PLAYER_BIDDING_TEXT_POSITIONS[4]{
+		{SCREEN_PADDING * 3 + CARD_WIDTH + 50.f, SCREEN_CENTER.y}, // left
+		{SCREEN_CENTER.x, SCREEN_HEIGHT - SCREEN_PADDING - CARD_HEIGHT - 100.f}, // bottom
+		{SCREEN_WIDTH - SCREEN_PADDING * 3 - CARD_WIDTH - 200.f, SCREEN_CENTER.y}, // right
+		{SCREEN_CENTER.x, SCREEN_PADDING + CARD_HEIGHT + 50.f}, // up
 	};
 
 	const sf::Vector2f					DECK_POSITION = SCREEN_CENTER;
@@ -89,6 +93,7 @@ GameState::GameState(StateMachine& stateMachine)
 	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyEndOfTrick>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyEndOfRound>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyNewRound>&>(*Application::getInstance()).registerObserver(*this);
 }
 
 void GameState::createCardSprites()
@@ -235,22 +240,10 @@ void GameState::notify(const NotifyCardDealing& data)
 
 void GameState::notify(const NotifyContractVote& data)
 {
-	//const std::string key = std::format("player {} vote:", data.m_player.getPlayerIndex());
-	//UIComponent* voteText = getComponent(key);
-
-	//if (!voteText)
-	//{
-	//	voteText = getOrCreateComponent(key);
-	//	voteText->setText(key + contractToString(data.m_contract));
-	//	voteText->setPosition({ 0.f, 36.f * data.m_player.getPlayerIndex() });
-	//}
-	//else
-	//{
-	//	voteText->setText(voteText->getText() + ", " + contractToString(data.m_contract));
-	//}
-
-	UIComponent* component = getOrCreateComponent(std::format("player_{}", data.m_player.getPlayerIndex()));
-	component->setText(component->getText() + " " + data.m_contract.toString());
+	UIComponent* component = getOrCreateComponent(std::format("bidding_{}", data.m_player.getPlayerIndex()));
+	component->setVisible(true);
+	component->setText(data.m_contract.toString());
+	component->setPosition(PLAYER_BIDDING_TEXT_POSITIONS[data.m_player.getPlayerIndex()]);
 
 	delayGame(WAIT_TIME_AFTER_BIDDING);
 }
@@ -287,6 +280,14 @@ void GameState::notify(const NotifyEndOfRound& data)
 
 	UIComponent* scoreText = getOrCreateComponent("score");
 	scoreText->setText(std::format("Score: {} - {}", m_belote.getTeamScore(0), m_belote.getTeamScore(1)));
+}
+
+void GameState::notify(const NotifyNewRound& data)
+{
+	for (size_t playerIndex = 0; playerIndex < 4; ++playerIndex)
+	{
+		getOrCreateComponent(std::format("bidding_{}", playerIndex))->setVisible(false);
+	}
 }
 
 void GameState::delayGame(float seconds)

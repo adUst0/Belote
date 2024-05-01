@@ -18,6 +18,52 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Engine\Application.cpp" />
+    <ClCompile Include="Source\Engine\AssetManager.cpp" />
+    <ClCompile Include="Source\Engine\InputManager.cpp" />
+    <ClCompile Include="Source\Engine\Observer.cpp" />
+    <ClCompile Include="Source\Engine\StateMachine.cpp" />
+    <ClCompile Include="Source\Engine\UI\UIComponent.cpp" />
+    <ClCompile Include="Source\Engine\UI\UIManager.cpp" />
+    <ClCompile Include="Source\Engine\UI\UIState.cpp" />
+    <ClCompile Include="Source\Engine\Utils.cpp" />
+    <ClCompile Include="Source\Game\ai\AI.cpp" />
+    <ClCompile Include="Source\Game\Belote.cpp" />
+    <ClCompile Include="Source\Game\BiddingManager.cpp" />
+    <ClCompile Include="Source\Game\Card.cpp" />
+    <ClCompile Include="Source\Game\Contract.cpp" />
+    <ClCompile Include="Source\Game\Player.cpp" />
+    <ClCompile Include="Source\Game\Round.cpp" />
+    <ClCompile Include="Source\Game\Trick.cpp" />
+    <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\States\GameState.cpp" />
+    <ClCompile Include="Source\States\SplashState.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Engine\Application.h" />
+    <ClInclude Include="Source\Engine\AssetManager.h" />
+    <ClInclude Include="Source\Engine\InputManager.h" />
+    <ClInclude Include="Source\Engine\Observer.h" />
+    <ClInclude Include="Source\Engine\StateMachine.h" />
+    <ClInclude Include="Source\Engine\UI\UIComponent.h" />
+    <ClInclude Include="Source\Engine\UI\UIManager.h" />
+    <ClInclude Include="Source\Engine\UI\UIState.h" />
+    <ClInclude Include="Source\Engine\Utils.h" />
+    <ClInclude Include="Source\Game\ai\AI.h" />
+    <ClInclude Include="Source\Game\Belote.h" />
+    <ClInclude Include="Source\Game\BiddingManager.h" />
+    <ClInclude Include="Source\Game\Card.h" />
+    <ClInclude Include="Source\Game\Contract.h" />
+    <ClInclude Include="Source\Game\GameState.h" />
+    <ClInclude Include="Source\Game\ObserverMessages.h" />
+    <ClInclude Include="Source\Game\Player.h" />
+    <ClInclude Include="Source\Game\Round.h" />
+    <ClInclude Include="Source\Game\Trick.h" />
+    <ClInclude Include="Source\States\GameState.h" />
+    <ClInclude Include="Source\States\SplashState.h" />
+    <ClInclude Include="Source\States\StateMachine.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -89,6 +135,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>;Source/;Source/Engine/;Source/Game/;Source/States/;Source/Engine/UI/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +151,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>;Source/;Source/Engine/;Source/Game/;Source/States/;Source/Engine/UI/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,7 +166,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);SFML_STATIC;DEBUG</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Development\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Development\SFML-2.5.1\include;Source/;Source/Engine/;Source/Game/;Source/States/;Source/Engine/UI/;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -136,7 +184,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);SFML_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Development\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Development\SFML-2.5.1\include;Source/;Source/Engine/;Source/Game/;Source/States/;Source/Engine/UI/;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -148,50 +196,6 @@
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);sfml-graphics-s.lib;sfml-window-s.lib;sfml-audio-s.lib;sfml-network-s.lib;sfml-system-s.lib;opengl32.lib;freetype.lib;winmm.lib;gdi32.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;ws2_32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="AI.cpp" />
-    <ClCompile Include="AssetManager.cpp" />
-    <ClCompile Include="BiddingManager.cpp" />
-    <ClCompile Include="Card.cpp" />
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Belote.cpp" />
-    <ClCompile Include="Contract.cpp" />
-    <ClCompile Include="GameState.cpp" />
-    <ClCompile Include="InputManager.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Observer.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Round.cpp" />
-    <ClCompile Include="SplashState.cpp" />
-    <ClCompile Include="StateMachine.cpp" />
-    <ClCompile Include="Trick.cpp" />
-    <ClCompile Include="UIComponent.cpp" />
-    <ClCompile Include="UIManager.cpp" />
-    <ClCompile Include="UIState.cpp" />
-    <ClCompile Include="Utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AI.h" />
-    <ClInclude Include="AssetManager.h" />
-    <ClInclude Include="BiddingManager.h" />
-    <ClInclude Include="Card.h" />
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="Belote.h" />
-    <ClInclude Include="Contract.h" />
-    <ClInclude Include="GameState.h" />
-    <ClInclude Include="InputManager.h" />
-    <ClInclude Include="Observer.h" />
-    <ClInclude Include="ObserverMessages.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="Round.h" />
-    <ClInclude Include="SplashState.h" />
-    <ClInclude Include="StateMachine.h" />
-    <ClInclude Include="Trick.h" />
-    <ClInclude Include="UIComponent.h" />
-    <ClInclude Include="UIManager.h" />
-    <ClInclude Include="UIState.h" />
-    <ClInclude Include="Utils.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

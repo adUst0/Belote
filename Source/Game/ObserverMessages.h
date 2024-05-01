@@ -24,6 +24,10 @@ struct NotifyCardAboutToBePlayed
 	const Card& m_card;
 };
 
+struct NotifyNewRound
+{
+	const Round& m_round;
+};
 
 struct NotifyEndOfTrick
 {

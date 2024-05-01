@@ -14,6 +14,7 @@ class Application
 	, public Subject<NotifyCardAboutToBePlayed>
 	, public Subject<NotifyEndOfTrick>
 	, public Subject<NotifyEndOfRound>
+	, public Subject<NotifyNewRound>
 {
 public:
 	Application(unsigned int width, unsigned int height, const std::string& title);

@@ -1,7 +1,5 @@
 #pragma once
 #include <vector>
-#include "Player.h"
-#include "Card.h"
 #include "Utils.h"
 
 template <typename Data>

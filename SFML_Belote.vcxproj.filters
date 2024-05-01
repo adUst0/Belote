@@ -13,159 +13,135 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Engine">
-      <UniqueIdentifier>{96a392bc-bcfc-4081-bcf6-8c36078e3196}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine">
-      <UniqueIdentifier>{159562bc-6708-4618-802f-e0e96a4c1ebc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Game">
-      <UniqueIdentifier>{84c2fac5-f651-45e5-a27a-0914661b402f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Game">
-      <UniqueIdentifier>{e28f863e-901a-4447-ae51-50f0275e300e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Game\AI">
-      <UniqueIdentifier>{04f74631-714f-42f5-9d95-fdf73084bd35}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Game\AI">
-      <UniqueIdentifier>{bb495cee-6ab1-4482-af38-89a4e8cb2d14}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\States">
-      <UniqueIdentifier>{8c2ebfee-9ff8-40fe-ab9e-257510e32051}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\States">
-      <UniqueIdentifier>{46ee9184-109b-4c2f-8f59-fc186dc89d65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Engine\UI">
-      <UniqueIdentifier>{ea4f36b6-ba2f-4175-bece-4f18bbd3aa3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Engine\UI">
-      <UniqueIdentifier>{f1881432-0999-44f5-a18c-99cf1a934d79}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Source\Engine\UI\UIComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AssetManager.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Engine\UI\UIManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Engine\UI\UIState.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InputManager.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Engine\Application.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StateMachine.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Engine\AssetManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Belote.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\Engine\InputManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Card.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\Engine\Observer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\Engine\Utils.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AI.cpp">
-      <Filter>Source Files\Game\AI</Filter>
+    <ClCompile Include="Source\Game\ai\AI.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Game\Belote.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Observer.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Game\BiddingManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameState.cpp">
-      <Filter>Source Files\States</Filter>
+    <ClCompile Include="Source\Game\Card.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SplashState.cpp">
-      <Filter>Source Files\States</Filter>
+    <ClCompile Include="Source\Game\Contract.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UIState.cpp">
-      <Filter>Source Files\Engine</Filter>
+    <ClCompile Include="Source\Game\Player.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UIComponent.cpp">
-      <Filter>Source Files\Engine\UI</Filter>
+    <ClCompile Include="Source\Game\Round.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UIManager.cpp">
-      <Filter>Source Files\Engine\UI</Filter>
+    <ClCompile Include="Source\Game\Trick.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contract.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\States\SplashState.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BiddingManager.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Trick.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\States\GameState.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Round.cpp">
-      <Filter>Source Files\Game</Filter>
+    <ClCompile Include="Source\Engine\StateMachine.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AssetManager.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Engine\UI\UIComponent.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Application.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Engine\UI\UIManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InputManager.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Engine\UI\UIState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StateMachine.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Engine\Application.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Belote.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Engine\AssetManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Card.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Engine\InputManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Engine\Observer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AI.h">
-      <Filter>Header Files\Game\AI</Filter>
+    <ClInclude Include="Source\Engine\Utils.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Game\ai\AI.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Observer.h">
-      <Filter>Header Files\Engine</Filter>
+    <ClInclude Include="Source\Game\Belote.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameState.h">
-      <Filter>Header Files\States</Filter>
+    <ClInclude Include="Source\Game\BiddingManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SplashState.h">
-      <Filter>Header Files\States</Filter>
+    <ClInclude Include="Source\Game\Card.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ObserverMessages.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Game\Contract.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UIManager.h">
-      <Filter>Header Files\Engine\UI</Filter>
+    <ClInclude Include="Source\Game\GameState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UIComponent.h">
-      <Filter>Header Files\Engine\UI</Filter>
+    <ClInclude Include="Source\Game\ObserverMessages.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UIState.h">
-      <Filter>Header Files\Engine\UI</Filter>
+    <ClInclude Include="Source\Game\Player.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contract.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Game\Round.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BiddingManager.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\Game\Trick.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Trick.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\States\SplashState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Round.h">
-      <Filter>Header Files\Game</Filter>
+    <ClInclude Include="Source\States\StateMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\States\GameState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\StateMachine.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

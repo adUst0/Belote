@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "Belote.h"
 #include <assert.h>
-#include "AI.h"
+#include "AI/AI.h"
 
 Player::Player(int teamIndex, int playerIndex, Belote& belote)
 	: m_teamIndex(teamIndex)
