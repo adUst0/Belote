@@ -29,6 +29,9 @@ public:
 
 	const Belote*								getBelote() const { return m_belote; }
 
+	const std::string&							getNameForUI() const { return m_nameForUI; }
+	
+
 private:
 	Belote* m_belote = nullptr;
 
@@ -39,6 +42,8 @@ private:
 
 	bool										m_contractVoteRequired = false;
 	bool										m_playCardRequired = false;
+
+	std::string									m_nameForUI;
 
 	std::vector<const Card*>					m_cards;
 };

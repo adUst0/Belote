@@ -45,8 +45,6 @@ private:
 	sf::Vector2f									calculateCardPosition(const Player& player, int cardOrder, int numCards) const;
 	sf::Vector2f									getCardPositionOnTable(const Player& player) const;
 
-	std::string										getPlayerName(const Player& player) const;
-
 	Belote											m_belote;
 	
 	float											m_delayGameSeconds = 0.f;

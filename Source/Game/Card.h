@@ -43,6 +43,7 @@ public:
 	Rank							getRank() const { return m_rank; }
 
 	const std::string&				toString() const { return m_toString; }
+	const std::string&				getTexturePath() const { return m_texturePath; }
 
 	int								getScore(bool isTrump) const;
 
@@ -50,4 +51,5 @@ private:
 	Suit							m_suit;
 	Rank							m_rank;
 	std::string						m_toString;
+	std::string						m_texturePath;
 };

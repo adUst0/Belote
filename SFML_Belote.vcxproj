@@ -39,6 +39,8 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\States\GameState.cpp" />
     <ClCompile Include="Source\States\SplashState.cpp" />
+    <ClCompile Include="Source\States\TGUISplashState.cpp" />
+    <ClCompile Include="Source\States\TGUIGameState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Engine\Application.h" />
@@ -63,6 +65,8 @@
     <ClInclude Include="Source\States\GameState.h" />
     <ClInclude Include="Source\States\SplashState.h" />
     <ClInclude Include="Source\States\StateMachine.h" />
+    <ClInclude Include="Source\States\TGUISplashState.h" />
+    <ClInclude Include="Source\States\TGUIGameState.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

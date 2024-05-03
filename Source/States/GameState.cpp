@@ -80,7 +80,7 @@ GameState::GameState(StateMachine& stateMachine)
 	scoreText->setPosition(SCORE_POSITION);
 
 	UIComponent* firstPlayerText = getOrCreateComponent("first_player");
-	firstPlayerText->setText(std::format("First player this round: {}", getPlayerName(*m_belote.getPlayers()[m_belote.getNextPlayerIndex(m_belote.getDealingPlayerIndex())])));
+	firstPlayerText->setText(std::format("First player this round: {}", m_belote.getPlayers()[m_belote.getNextPlayerIndex(m_belote.getDealingPlayerIndex())]->getNameForUI()));
 	firstPlayerText->setPosition(FIRST_PLAYER_TEXT_POSITION);
 
 	// TODO: double/redouble needs to be reworked
@@ -101,8 +101,7 @@ void GameState::createCardSprites()
 	for (const Card* card : m_belote.getDeck())
 	{
 		UIComponent* component = getOrCreateComponent(card->toString());
-		const std::string path = std::format("assets/{}_of_{}.png", stringFromRank(card->getRank()), stringFromSuit(card->getSuit()));
-		component->addSprite(path, CARD_SCALE);
+		component->addSprite(card->getTexturePath(), CARD_SCALE);
 		component->setBackground(sf::Color::White);
 		component->setPosition(DECK_POSITION);
 		component->setOriginTopCenter(true);
@@ -119,7 +118,7 @@ void GameState::createPlayerNames()
 	for (const auto& player_ptr : m_belote.getPlayers())
 	{
 		UIComponent* component = getOrCreateComponent(std::format("player_{}", player_ptr->getPlayerIndex()));
-		component->setText(getPlayerName(*player_ptr));
+		component->setText(player_ptr->getNameForUI());
 
 		component->setPosition(PLAYER_NAME_POSITIONS[player_ptr->getPlayerIndex()]);
 
@@ -163,11 +162,6 @@ sf::Vector2f GameState::calculateCardPosition(const Player& player, int cardInde
 sf::Vector2f GameState::getCardPositionOnTable(const Player& player) const
 {
 	return CARD_POSITIONS_ON_TABLE[player.getPlayerIndex()];
-}
-
-std::string GameState::getPlayerName(const Player& player) const
-{
-	return std::format("Player {} ({})", player.getPlayerIndex(), player.isHuman() ? "human" : "AI");
 }
 
 void GameState::handleInput()
@@ -276,7 +270,7 @@ void GameState::notify(const NotifyEndOfRound& data)
 {
 	// Reset player names (cleaning contract voting)
 	createPlayerNames();
-	getOrCreateComponent("first_player")->setText(std::format("First player this round: {}", getPlayerName(*m_belote.getPlayers()[m_belote.getNextPlayerIndex(m_belote.getDealingPlayerIndex())])));
+	getOrCreateComponent("first_player")->setText(std::format("First player this round: {}", m_belote.getPlayers()[m_belote.getNextPlayerIndex(m_belote.getDealingPlayerIndex())]->getNameForUI()));
 
 	UIComponent* scoreText = getOrCreateComponent("score");
 	scoreText->setText(std::format("Score: {} - {}", m_belote.getTeamScore(0), m_belote.getTeamScore(1)));

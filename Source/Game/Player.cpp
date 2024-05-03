@@ -2,11 +2,13 @@
 #include "Belote.h"
 #include <assert.h>
 #include "AI/AI.h"
+#include <format>
 
 Player::Player(int teamIndex, int playerIndex, Belote& belote)
 	: m_teamIndex(teamIndex)
 	, m_playerIndex(playerIndex)
 	, m_belote(&belote)
+	, m_nameForUI(std::format("Player {} ({})", playerIndex, m_isHuman ? "human" : "AI"))
 {
 }
 

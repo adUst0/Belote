@@ -49,6 +49,7 @@ Card::Card(Suit suit, Rank rank)
 	: m_suit(suit)
 	, m_rank(rank)
 	, m_toString(std::format("Card {} {}", stringFromSuit(suit), stringFromRank(rank)))
+	, m_texturePath(std::format("assets/{}_of_{}.jpg", stringFromRank(rank), stringFromSuit(suit)))
 {
 }
 
