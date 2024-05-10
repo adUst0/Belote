@@ -49,6 +49,7 @@ public:
 	
 	Round&										getCurrentRound() { return *m_rounds.back(); }
 	const Round&								getCurrentRound() const { return *m_rounds.back(); }
+	bool										anyRoundPlayed() const { return !m_rounds.empty(); }
 
 	int											getTeamScore(int teamIndex) const { return m_teamTotalScore[teamIndex]; }
 

@@ -244,12 +244,10 @@ void Belote::updateDealCardsToActivePlayerState()
 	{
 		if (getActivePlayer().getCards().size() == 3)
 		{
-			m_activePlayerIndex = getNextPlayerIndex();
 			enterState(BeloteState::DealCardsToActivePlayer); // deal the rest 2 cards of the initial hand
 		}
 		else if (getActivePlayer().getCards().size() == 5)
 		{
-			m_activePlayerIndex = getNextPlayerIndex();
 			enterState(BeloteState::ChooseContract);
 		}
 		else
@@ -267,6 +265,7 @@ void Belote::updateDealCardsToActivePlayerState()
 void Belote::enterChooseContractState()
 {
 	getActivePlayer().setContractVoteRequired();
+	static_cast<Subject<NotifyContractVoteRequired>&>(*Application::getInstance()).notifyObservers(NotifyContractVoteRequired(getActivePlayer()));
 }
 
 void Belote::updateChooseContractState()
@@ -372,9 +371,10 @@ void Belote::updateCalculateEndOfRoundScore()
 		m_dealingPlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
 		m_activePlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
 
-		enterState(BeloteState::DealCardsToActivePlayer);
-
 		static_cast<Subject<NotifyEndOfRound>&>(*Application::getInstance()).notifyObservers(NotifyEndOfRound(*m_rounds.back()));
+		createNewRound();
+
+		enterState(BeloteState::DealCardsToActivePlayer);		
 	}
 	else
 	{

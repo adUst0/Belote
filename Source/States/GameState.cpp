@@ -11,7 +11,7 @@ namespace
 		enum {Vertical, Horizontal} m_direction;
 	};
 
-	const float							WAIT_TIME_AFTER_BIDDING = 0.5f;
+	const float							AI_BIDDING_WAIT_TIME = 0.5f;
 	const float							WAIT_TIME_AFTER_PLAYING = 1.f;
 	const float							CARD_DEALING_TIME_SECONDS = 0.5;
 
@@ -239,7 +239,7 @@ void GameState::notify(const NotifyContractVote& data)
 	component->setText(data.m_contract.toString());
 	component->setPosition(PLAYER_BIDDING_TEXT_POSITIONS[data.m_player.getPlayerIndex()]);
 
-	delayGame(WAIT_TIME_AFTER_BIDDING);
+	delayGame(AI_BIDDING_WAIT_TIME);
 }
 
 void GameState::notify(const NotifyCardAboutToBePlayed& data)

@@ -12,6 +12,7 @@
 #include "TGUI/Widgets/Group.hpp"
 #include "TGUI/Widgets/HorizontalWrap.hpp"
 #include "TGUI/Widgets/HorizontalLayout.hpp"
+#include "TGUI/Widgets/Panel.hpp"
 
 namespace
 {
@@ -30,7 +31,9 @@ namespace
 	tgui::Layout2d						DECK_POSITION{ "1%", "1%" };
 	const float							DECK_CARDS_OFFSET = 9;
 
-
+	const int							CARD_DEALING_TIME_MS = 500;
+	const float							AI_BIDDING_WAIT_TIME = 1.f;
+	const float							WAIT_TIME_AFTER_PLAYING = 1.f;
 }
 
 TGUIGameState::TGUIGameState(StateMachine& stateMachine)
@@ -39,12 +42,42 @@ TGUIGameState::TGUIGameState(StateMachine& stateMachine)
 {
 	m_gui.add(tgui::Picture::create("assets/background.jpg"), "background");
 
-	//createDeck();
+	m_pauseLabel = tgui::Label::create("PAUSE");
+	m_pauseLabel->setTextSize(78);
+	m_pauseLabel->getRenderer()->setTextColor(sf::Color::Red);
+	m_pauseLabel->setPosition("50% - width/2", "50%");
+	m_pauseLabel->setVisible(false);
+	m_gui.add(m_pauseLabel, "pause");
 
-	//createPlayerNames();
+	createDeck();
+	createPlayerNames();
+	createInfoPanel();
+	createActivePlayerLabel();
 
-	testWidgetPositions();
+	updateInfoPanel();
+	updateActivePlayerLabel();
 
+	static_cast<Subject<NotifyCardDealing>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyEndOfTrick>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyEndOfRound>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyNewRound>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyContractVoteRequired>&>(*Application::getInstance()).registerObserver(*this);
+	//testWidgetPositions();
+}
+
+void TGUIGameState::createDeck()
+{
+	size_t cardIndex = 0;
+	for (const Card* card : m_belote.getDeck())
+	{
+		auto cardWidget = tgui::Picture::create(tgui::Texture(card->getTexturePath()));
+		cardWidget->setScale(CARD_SCALE);
+		cardWidget->setPosition(getCardPositionInDeck(cardIndex));
+		m_gui.add(cardWidget, card->toString());
+		++cardIndex;
+	}
 }
 
 void TGUIGameState::createPlayerNames()
@@ -59,21 +92,65 @@ void TGUIGameState::createPlayerNames()
 		const float offsetY = player_ptr->getPlayerIndex() == 1 ? label->getSize().y : 0;
 
 		label->setPosition(getPlayerNamePosition(*player_ptr, -offsetX, -offsetY));
-		m_gui.add(label);
+		m_gui.add(label, player_ptr->getNameForUI());
 	}
 }
 
-void TGUIGameState::createDeck()
+void TGUIGameState::createInfoPanel()
 {
-	size_t cardIndex = 0;
-	for (const Card* card : m_belote.getDeck())
-	{
-		auto cardWidget = tgui::Picture::create(tgui::Texture(card->getTexturePath()));
-		cardWidget->setScale(CARD_SCALE);
-		cardWidget->setPosition(getCardPositionInDeck(cardIndex));
-		m_gui.add(cardWidget, card->toString());
-		++cardIndex;
-	}
+	auto infoPanel = tgui::Panel::create();
+
+	auto pos1 = getPlayerNamePosition(*m_belote.getPlayers()[0]);
+	auto pos2 = getCardPositionInPlayer(*m_belote.getPlayers()[0], 0);
+	infoPanel->setPosition({ pos1.x, pos2.y });
+	infoPanel->setSize({ CARD_WIDTH * 3 + 2 * DECK_CARDS_OFFSET, CARD_HEIGHT });
+	infoPanel->getRenderer()->setBackgroundColor("#33b249");
+	infoPanel->getRenderer()->setBorders(1);
+	m_gui.add(infoPanel, "info_panel");
+
+	m_scoreLabel = tgui::Label::create(std::format("Total score: {} - {}", 0, 0));
+	m_scoreLabel->setTextSize(24);
+	infoPanel->add(m_scoreLabel, "total_score");
+
+	m_contractLabel = tgui::Label::create(std::format("Contract: {}", ""));
+	m_contractLabel->setTextSize(16);
+	m_contractLabel->setPosition({ 0, m_scoreLabel->getSize().y });
+	infoPanel->add(m_contractLabel, "contract");
+
+	m_contractCallerLabel = tgui::Label::create(std::format("Called by: {}", ""));
+	m_contractCallerLabel->setTextSize(16);
+	m_contractCallerLabel->setPosition({ 0, m_scoreLabel->getSize().y + m_contractLabel->getSize().y });
+	infoPanel->add(m_contractCallerLabel, "contract_caller");
+
+	auto size = m_scoreLabel->getSize() + m_contractLabel->getSize() + m_contractCallerLabel->getSize();
+	infoPanel->setSize({ infoPanel->getSize().x, size.y });
+}
+
+void TGUIGameState::createActivePlayerLabel()
+{
+	m_activePlayerLabel = tgui::Label::create("ACTIVE");
+	m_activePlayerLabel->setTextSize(28);
+	m_activePlayerLabel->getRenderer()->setBackgroundColor("#dd7973");
+	m_activePlayerLabel->getRenderer()->setBorders(1);
+	m_activePlayerLabel->setPosition(getActivePlayerLabelPosition(m_belote.getActivePlayer()));
+	m_gui.add(m_activePlayerLabel);
+}
+
+void TGUIGameState::updateInfoPanel()
+{
+	m_scoreLabel->setText(std::format("Total score: {} - {}", m_belote.getTeamScore(0), m_belote.getTeamScore(1)));
+
+	const Contract* contract = m_belote.anyRoundPlayed() ? &m_belote.getCurrentRound().getBiddingManager().getContract() : nullptr;
+	const std::string contract_str = contract && contract->getType() != Contract::Type::Invalid ? contract->toString() : "";
+	m_contractLabel->setText("Contract: " + contract_str);
+	
+	const std::string caller_str = contract && contract->getPlayer() ? contract->getPlayer()->getNameForUI() : "";
+	m_contractCallerLabel->setText("Called by: " + caller_str);
+}
+
+void TGUIGameState::updateActivePlayerLabel(const Player* player /*= nullptr*/)
+{
+	m_activePlayerLabel->setPosition(getActivePlayerLabelPosition(player ? *player : m_belote.getActivePlayer()));
 }
 
 tgui::Layout2d TGUIGameState::getCardPositionInDeck(size_t cardIndex)
@@ -213,6 +290,21 @@ tgui::Layout2d TGUIGameState::getPlayerNamePosition(const Player& player, float 
 	return {};
 }
 
+tgui::Layout2d TGUIGameState::getActivePlayerLabelPosition(const Player& player)
+{
+	auto label = m_gui.get(player.getNameForUI());
+	if (!label) return {};
+
+	auto pos = label->getPosition();
+	if (player.getPlayerIndex() == 2)
+	{
+		const float offsetX = m_activePlayerLabel->getSize().x;
+		return { pos.x - DECK_CARDS_OFFSET - offsetX, pos.y }; // Right player: label is on the left of their name
+	}
+
+	return { pos.x + DECK_CARDS_OFFSET + label->getSize().x, pos.y };
+}
+
 void TGUIGameState::handleInput()
 {
 	sf::RenderWindow& window = (sf::RenderWindow&)*m_gui.getTarget();
@@ -229,9 +321,32 @@ void TGUIGameState::handleInput()
 		}
 		else if (sf::Event::KeyReleased == event.type && event.key.code == sf::Keyboard::Key::F5)
 		{
+			togglePause();
+		}
+		else if (sf::Event::KeyReleased == event.type && event.key.code == sf::Keyboard::Key::F12)
+		{
 			m_gui.removeAllWidgets();
 			testWidgetPositions();
 		}
+	}
+}
+
+void TGUIGameState::update(float dtSeconds)
+{
+	if (m_delayGameSeconds > 0.f)
+	{
+		m_delayGameSeconds -= dtSeconds;
+	}
+
+	// Note: The following check is for widgets attached to root. We need it for card movement
+	const bool isPlayingAnyAnimation = std::any_of(m_gui.getWidgets().begin(), m_gui.getWidgets().end(), [](tgui::Widget::Ptr widget)
+	{
+		return widget->isAnimationPlaying();
+	});
+	const bool shouldPause = m_delayGameSeconds > 0.f || m_shouldPauseGame || isPlayingAnyAnimation;
+	if (!shouldPause)
+	{
+		m_belote.updateState();
 	}
 }
 
@@ -242,6 +357,76 @@ void TGUIGameState::draw()
 	window.clear({ 240, 240, 240 });
 	m_gui.draw();
 	window.display();
+}
+
+void TGUIGameState::notify(const NotifyCardDealing& data)
+{
+	auto cardWidget = m_gui.get(data.m_card.toString());
+	auto pos = getCardPositionInPlayer(data.m_player, data.m_player.getCards().size());
+	cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
+}
+
+void TGUIGameState::notify(const NotifyContractVoteRequired& data)
+{
+	updateActivePlayerLabel();
+
+	if (!data.m_player.isHuman())
+	{
+		delayGame(AI_BIDDING_WAIT_TIME);
+	}
+}
+
+void TGUIGameState::notify(const NotifyContractVote& data)
+{
+	updateInfoPanel();
+}
+
+void TGUIGameState::notify(const NotifyCardAboutToBePlayed& data)
+{
+	auto cardWidget = m_gui.get(data.m_card.toString());
+	auto pos = getCardPositionOnTable(data.m_player);
+	cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
+}
+
+void TGUIGameState::notify(const NotifyEndOfTrick& data)
+{
+	for (const Card* card : data.m_trick.getCards())
+	{
+		auto cardWidget = m_gui.get(card->toString());
+		cardWidget->setVisible(false);
+	}
+}
+
+void TGUIGameState::notify(const NotifyEndOfRound& data)
+{
+	updateInfoPanel();
+}
+
+void TGUIGameState::notify(const NotifyNewRound& data)
+{
+	size_t cardIndex = 0;
+	for (const Card* card : m_belote.getDeck())
+	{
+		auto cardWidget = m_gui.get(card->toString());
+		cardWidget->finishAllAnimations();
+		cardWidget->setPosition(getCardPositionInDeck(cardIndex));
+		cardWidget->setVisible(true);
+		++cardIndex;
+	}
+	updateInfoPanel();
+}
+
+void TGUIGameState::delayGame(float seconds)
+{
+	m_delayGameSeconds = seconds;
+}
+
+void TGUIGameState::togglePause()
+{
+	m_shouldPauseGame = !m_shouldPauseGame;
+
+	m_pauseLabel->setVisible(m_shouldPauseGame);
+	m_pauseLabel->moveToFront();
 }
 
 void TGUIGameState::testWidgetPositions()
@@ -268,5 +453,16 @@ void TGUIGameState::testWidgetPositions()
 		cardWidget->setScale(CARD_SCALE);
 		cardWidget->setPosition(getCardPositionOnTable(*player_ptr));
 		m_gui.add(cardWidget, card->toString());
+
+		auto activeLabel = tgui::Label::create("ACTIVE");
+		activeLabel->setTextSize(28);
+		activeLabel->getRenderer()->setBackgroundColor("#dd7973");
+		activeLabel->getRenderer()->setBorders(1);
+		activeLabel->setPosition(getActivePlayerLabelPosition(*player_ptr));
+		m_gui.add(activeLabel);
 	}
+
+
+	createInfoPanel();
+
 }
