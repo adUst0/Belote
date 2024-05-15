@@ -3,6 +3,7 @@
 #include <TGUI/Backend/SFML-Graphics.hpp>
 #include "Belote.h"
 #include "TGUI/Widgets/Label.hpp"
+#include "TGUI/Widgets/Button.hpp"
 #include "Observer.h"
 
 class NotifyCardDealing;
@@ -12,8 +13,10 @@ class NotifyEndOfTrick;
 class NotifyEndOfRound;
 class NotifyNewRound;
 class NotifyContractVoteRequired;
+struct NotifyPlayCardRequired;
 
 using LabelPtr = tgui::Label::Ptr;
+using ButtonPtr = tgui::Button::Ptr;
 
 class TGUIGameState 
 	: public BaseState
@@ -24,9 +27,10 @@ class TGUIGameState
 	, public Observer<NotifyEndOfTrick>
 	, public Observer<NotifyEndOfRound>
 	, public Observer<NotifyNewRound>
+	, public Observer<NotifyPlayCardRequired>
 {
 public:
-	TGUIGameState(StateMachine& stateMachine);
+	TGUIGameState(StateMachine& stateMachine, bool human = false);
 
 	void							createDeck();
 	void							createPlayerNames();
@@ -50,6 +54,7 @@ public:
 	virtual void					notify(const NotifyCardDealing& data) override;
 	virtual void					notify(const NotifyContractVoteRequired& data) override;
 	virtual void					notify(const NotifyContractVote& data) override;
+	virtual void					notify(const NotifyPlayCardRequired& data) override;
 	virtual void					notify(const NotifyCardAboutToBePlayed& data) override;
 	virtual void					notify(const NotifyEndOfTrick& data) override;
 	virtual void					notify(const NotifyEndOfRound& data) override;
@@ -57,6 +62,8 @@ public:
 
 	void							delayGame(float seconds);
 	void							togglePause();
+
+	void							showContractOptions();
 private:
 	void							testWidgetPositions();
 
@@ -72,6 +79,7 @@ private:
 	LabelPtr						m_pauseLabel;
 
 	std::vector<LabelPtr>			m_playerNameLabels;
+	std::vector<ButtonPtr>			m_contractVoteButtons;
 	
 	Belote							m_belote;
 

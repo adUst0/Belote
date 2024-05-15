@@ -8,6 +8,7 @@ class BiddingManager
 {
 public:
 	void							bid(Contract&& contract);
+	void							bid(const Contract& contract);
 	bool							canBid(const Contract& contract) const;
 
 	bool							isBiddingOver() const;

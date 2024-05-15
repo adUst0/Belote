@@ -31,18 +31,33 @@ TGUISplashState::TGUISplashState(StateMachine& stateMachine)
 
 	auto button = buttons.emplace_back(tgui::Button::create("New Game"));
 	button->onPress([this]() { std::cout << "New Game button clicked. TODO - not implemented" << std::endl; });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
 
 	button = buttons.emplace_back(tgui::Button::create("New Game (Debug TGUI)"));
 	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine)); });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
+
+	button = buttons.emplace_back(tgui::Button::create("New Game Human (Debug TGUI)"));
+	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine, true)); });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
 
 	button = buttons.emplace_back(tgui::Button::create("New Game (Debug Old)"));
 	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine)); });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
 
 	button = buttons.emplace_back(tgui::Button::create("Rules"));
 	button->onPress([this]() { std::cout << "Rules button clicked. TODO - not implemented" << std::endl; });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
 
 	button = buttons.emplace_back(tgui::Button::create("Quit"));
 	button->onPress([]() { Application::getInstance()->getWindow().close(); });
+	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
+	button->getRenderer()->setRoundedBorderRadius(50.f);
 
 	//tgui::Texture texture("assets/button.png");
 	//tgui::Texture textureHover("assets/button_hover.png");

@@ -308,6 +308,7 @@ void Belote::enterPlayCardPhase()
 	}
 
 	getActivePlayer().setPlayCardRequired();
+	static_cast<Subject<NotifyPlayCardRequired>&>(*Application::getInstance()).notifyObservers(NotifyPlayCardRequired());
 }
 
 void Belote::updatePlayCardPhase()

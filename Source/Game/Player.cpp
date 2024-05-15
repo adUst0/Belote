@@ -8,8 +8,14 @@ Player::Player(int teamIndex, int playerIndex, Belote& belote)
 	: m_teamIndex(teamIndex)
 	, m_playerIndex(playerIndex)
 	, m_belote(&belote)
-	, m_nameForUI(std::format("Player {} ({})", playerIndex, m_isHuman ? "human" : "AI"))
+	, m_contractVote(Contract::Type::Invalid, this)
 {
+	updateName();
+}
+
+void Player::updateName()
+{
+	m_nameForUI = std::format("Player {} ({})", m_playerIndex, m_isHuman ? "human" : "AI");
 }
 
 void Player::returnCards()
@@ -33,6 +39,7 @@ bool Player::hasSuit(Suit suit) const
 void Player::setContractVoteRequired()
 {
 	m_contractVoteRequired = true;
+	m_contractVote = Contract(Contract::Type::Invalid, this);
 }
 
 bool Player::applyContractVoteIfReady()
@@ -45,11 +52,15 @@ bool Player::applyContractVoteIfReady()
 		m_contractVoteRequired = false;
 		return true;
 	}
-	else
+	
+	if (m_contractVote.getType() != Contract::Type::Invalid && m_belote->getCurrentRound().getBiddingManager().canBid(m_contractVote))
 	{
-		// TODO
-		return false;
+		m_belote->getCurrentRound().getBiddingManager().bid(m_contractVote);
+		m_contractVoteRequired = false;
+		return true;
 	}
+
+	return false;
 }
 
 void Player::setPlayCardRequired()
@@ -61,8 +72,16 @@ void Player::setPlayCardRequired()
 		const Card* card = DummyAI::chooseCardToPlay(*this);
 		const bool validMove = card && m_belote->getCurrentRound().getCurrentTrick().canPlayCard(*card);
 		assert(validMove);
-		m_belote->getCurrentRound().getCurrentTrick().playCard(*card);
-		m_cards.erase(std::find(m_cards.begin(), m_cards.end(), card));
+		playCard(*card);
+	}
+}
+
+void Player::playCard(const Card& card)
+{
+	if (m_belote->getCurrentRound().getCurrentTrick().canPlayCard(card))
+	{
+		m_belote->getCurrentRound().getCurrentTrick().playCard(card);
+		m_cards.erase(std::find(m_cards.begin(), m_cards.end(), &card));
 		m_playCardRequired = false;
 	}
 }

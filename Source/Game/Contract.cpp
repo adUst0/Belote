@@ -51,11 +51,11 @@ std::string Contract::toString() const
 
 	if (m_level == Level::Double)
 	{
-		str += " (Double)";
+		str = " Double";
 	}
 	else if (m_level == Level::Redouble)
 	{
-		str += " (Redouble)";
+		str = " Redouble";
 	}
 
 	return str;

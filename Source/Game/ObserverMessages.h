@@ -23,6 +23,11 @@ struct NotifyContractVote
 	const Contract& m_contract;
 };
 
+struct NotifyPlayCardRequired
+{
+
+};
+
 struct NotifyCardAboutToBePlayed
 {
 	const Player& m_player;

@@ -41,10 +41,15 @@ namespace
 	const char							BG_COLOR_RED[] = "#dd7973";
 }
 
-TGUIGameState::TGUIGameState(StateMachine& stateMachine)
+TGUIGameState::TGUIGameState(StateMachine& stateMachine, bool human /*= false*/)
 	: BaseState(stateMachine)
 	, m_gui(Application::getInstance()->getWindow())
 {
+	if (human)
+	{
+		m_belote.getPlayers()[1]->setHuman(true);
+	}
+
 	m_gui.add(tgui::Picture::create("assets/background.jpg"), "background");
 
 	m_pauseLabel = tgui::Label::create("PAUSE");
@@ -69,6 +74,7 @@ TGUIGameState::TGUIGameState(StateMachine& stateMachine)
 	static_cast<Subject<NotifyEndOfRound>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyNewRound>&>(*Application::getInstance()).registerObserver(*this);
 	static_cast<Subject<NotifyContractVoteRequired>&>(*Application::getInstance()).registerObserver(*this);
+	static_cast<Subject<NotifyPlayCardRequired>&>(*Application::getInstance()).registerObserver(*this);
 	//testWidgetPositions();
 }
 
@@ -398,6 +404,10 @@ void TGUIGameState::notify(const NotifyContractVoteRequired& data)
 	{
 		delayGame(AI_BIDDING_WAIT_TIME);
 	}
+	else
+	{
+		showContractOptions();
+	}
 }
 
 void TGUIGameState::notify(const NotifyContractVote& data)
@@ -411,6 +421,7 @@ void TGUIGameState::notify(const NotifyCardAboutToBePlayed& data)
 	auto cardWidget = m_gui.get(data.m_card.toString());
 	auto pos = getCardPositionOnTable(data.m_player);
 	cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
+	delayGame(WAIT_TIME_AFTER_PLAYING);
 }
 
 void TGUIGameState::notify(const NotifyEndOfTrick& data)
@@ -451,6 +462,35 @@ void TGUIGameState::notify(const NotifyNewRound& data)
 	updateInfoPanel();
 }
 
+void TGUIGameState::notify(const NotifyPlayCardRequired& data)
+{
+	if (!m_belote.getActivePlayer().isHuman())
+	{
+		return;
+	}
+
+	for (const Card* card : m_belote.getActivePlayer().getCards())
+	{
+		tgui::Picture::Ptr widget = m_gui.get<tgui::Picture>(card->toString());
+		const float opacity = m_belote.getCurrentRound().getCurrentTrick().canPlayCard(*card) ? 1.f : 0.5f;
+		widget->getRenderer()->setOpacity(opacity);
+
+		widget->onMousePress([this, card]()
+		{
+			if (m_belote.getCurrentRound().getCurrentTrick().canPlayCard(*card))
+			{
+				for (const Card* card : m_belote.getActivePlayer().getCards())
+				{
+					tgui::Picture::Ptr widget = m_gui.get<tgui::Picture>(card->toString());
+					widget->onMousePress.disconnectAll();
+					widget->getRenderer()->setOpacity(1.f);
+				}
+				m_belote.getActivePlayer().playCard(*card);
+			}
+		});
+	}
+}
+
 void TGUIGameState::delayGame(float seconds)
 {
 	m_delayGameSeconds = seconds;
@@ -462,6 +502,41 @@ void TGUIGameState::togglePause()
 
 	m_pauseLabel->setVisible(m_shouldPauseGame);
 	m_pauseLabel->moveToFront();
+}
+
+void TGUIGameState::showContractOptions()
+{
+	std::vector<Contract> votes;
+
+	for (int i = (int)Contract::Type::Pass; i <= (int)Contract::Type::AllTrumps; ++i)
+	{
+		votes.emplace_back(Contract::Type(i), &m_belote.getActivePlayer());		
+	}
+
+	const Contract& current = m_belote.getCurrentRound().getBiddingManager().getContract();
+
+	votes.emplace_back(current.getType(), &m_belote.getActivePlayer(), Contract::Level::Double);
+	votes.emplace_back(current.getType(), &m_belote.getActivePlayer(), Contract::Level::Redouble);
+
+	for (size_t i = 0u; i < votes.size(); ++i)
+	{
+		auto button = tgui::Button::create(std::format("{}", votes[i].toString()));
+		button->setSize(200, 25);
+		button->setEnabled(m_belote.getCurrentRound().getBiddingManager().canBid(votes[i]));
+		const std::string y = std::format("parent.height / 4 + {} * 5 + height * {} + 25%", i, i);
+		button->setPosition({ "(parent.width - width) / 2", y.c_str() });
+		button->onPress([this, contract = votes[i]]()
+		{ 
+			m_belote.getActivePlayer().setContractVote(contract);
+			for (auto& button : m_contractVoteButtons)
+			{
+				m_gui.remove(button);
+			}
+			m_contractVoteButtons.clear();
+		});
+		m_gui.add(button, votes[i].toString());
+		m_contractVoteButtons.push_back(button);
+	}
 }
 
 void TGUIGameState::testWidgetPositions()

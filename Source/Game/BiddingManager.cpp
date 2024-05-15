@@ -2,6 +2,7 @@
 #include <cassert>
 #include "Utils.h"
 #include "Application.h"
+#include "Player.h"
 
 void BiddingManager::bid(Contract&& contract)
 {
@@ -10,6 +11,12 @@ void BiddingManager::bid(Contract&& contract)
 
 	Utils::log("Voting for contract {}\n", m_biddings.back().toString());
 	static_cast<Subject<NotifyContractVote>&>(*Application::getInstance()).notifyObservers(NotifyContractVote(*m_biddings.back().getPlayer(), m_biddings.back()));
+}
+
+void BiddingManager::bid(const Contract& contract)
+{
+	Contract temp = contract;
+	bid(std::move(temp));
 }
 
 bool BiddingManager::canBid(const Contract& bid) const
@@ -35,7 +42,8 @@ bool BiddingManager::canBid(const Contract& bid) const
 	{
 		return bid.getType() != Contract::Type::Pass && 
 			currentContract.getType() != Contract::Type::Pass && 
-			(int8_t)bid.getLevel() > (int8_t)currentContract.getLevel();
+			(int8_t)bid.getLevel() == (int8_t)currentContract.getLevel() + 1 &&
+			bid.getPlayer()->getTeamIndex() != currentContract.getPlayer()->getTeamIndex();
 	}
 
 	return (int8_t)bid.getType() > (int8_t)currentContract.getType();
