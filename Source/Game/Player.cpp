@@ -33,13 +33,22 @@ bool Player::hasSuit(Suit suit) const
 void Player::setContractVoteRequired()
 {
 	m_contractVoteRequired = true;
+}
 
+bool Player::applyContractVoteIfReady()
+{
 	if (!m_isHuman)
 	{
 		Contract vote = DummyAI::chooseContractVote(*this);
 		assert(m_belote->getCurrentRound().getBiddingManager().canBid(vote));
 		m_belote->getCurrentRound().getBiddingManager().bid(std::move(vote));
 		m_contractVoteRequired = false;
+		return true;
+	}
+	else
+	{
+		// TODO
+		return false;
 	}
 }
 

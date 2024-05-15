@@ -21,6 +21,9 @@ public:
 
 	bool										isContractVoteRequired() const { return m_contractVoteRequired; }
 	void										setContractVoteRequired();
+	bool										applyContractVoteIfReady();
+
+
 
 	bool										isPlayCardRequired() const { return m_playCardRequired; }
 	void										setPlayCardRequired();

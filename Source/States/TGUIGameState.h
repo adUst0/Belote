@@ -13,6 +13,8 @@ class NotifyEndOfRound;
 class NotifyNewRound;
 class NotifyContractVoteRequired;
 
+using LabelPtr = tgui::Label::Ptr;
+
 class TGUIGameState 
 	: public BaseState
 	, public Observer<NotifyCardDealing>
@@ -26,20 +28,20 @@ class TGUIGameState
 public:
 	TGUIGameState(StateMachine& stateMachine);
 
-
 	void							createDeck();
 	void							createPlayerNames();
 	void							createInfoPanel();
-	void							createActivePlayerLabel();
+	void							createContractVoteLabel();
 
 	void							updateInfoPanel();
 	void							updateActivePlayerLabel(const Player* player = nullptr);
+	void							updateContractVoteLabel(const Contract* contractVote = nullptr);
 
 	tgui::Layout2d					getCardPositionInDeck(size_t cardIndex);
 	tgui::Layout2d					getCardPositionInPlayer(const Player& player, size_t cardIndex);
 	tgui::Layout2d					getCardPositionOnTable(const Player& player);
 	tgui::Layout2d					getPlayerNamePosition(const Player& player, float offsetX = 0, float offsetY = 0);
-	tgui::Layout2d					getActivePlayerLabelPosition(const Player& player);
+	tgui::Layout2d					getContractVoteLabelPosition(const Player& player);
 
 	virtual void					handleInput() override;
 	virtual void					update(float /*dtSeconds*/) override;
@@ -61,14 +63,15 @@ private:
 
 	tgui::Gui						m_gui;
 
-	tgui::Label::Ptr				m_activePlayerLabel;
-	tgui::Label::Ptr				m_contractVoteLabel;
+	LabelPtr						m_contractVoteLabel;
 
-	tgui::Label::Ptr				m_scoreLabel;
-	tgui::Label::Ptr				m_contractLabel;
-	tgui::Label::Ptr				m_contractCallerLabel;
+	LabelPtr						m_scoreLabel;
+	LabelPtr						m_contractLabel;
+	LabelPtr						m_contractCallerLabel;
 
-	tgui::Label::Ptr				m_pauseLabel;
+	LabelPtr						m_pauseLabel;
+
+	std::vector<LabelPtr>			m_playerNameLabels;
 	
 	Belote							m_belote;
 

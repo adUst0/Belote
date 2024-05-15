@@ -270,7 +270,7 @@ void Belote::enterChooseContractState()
 
 void Belote::updateChooseContractState()
 {
-	const bool isActivePlayerReady = !getActivePlayer().isContractVoteRequired();
+	const bool isActivePlayerReady = getActivePlayer().applyContractVoteIfReady();
 	if (!isActivePlayerReady)
 	{
 		// Still waiting
