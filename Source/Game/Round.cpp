@@ -5,6 +5,8 @@
 namespace
 {
 	const size_t NUM_TRICKS_PER_ROUND = 8;
+
+	const size_t ALL_TRICKS_WINNER_BONUS_SCORE = 9; // valat
 }
 
 Round::Round(const Belote* belote)
@@ -28,36 +30,70 @@ size_t Round::getLastTrickWinnerTeam() const
 	return m_tricks.back()->getWinningCardTurn()->m_player->getTeamIndex();
 }
 
-size_t Round::calculateTeamScore(size_t teamIndex) const
+size_t Round::calculatePointsFromCards(const std::vector<const Card*>& cards) const
 {
-	// TODO: vytre
-	// TODO: Declarations not implemented yet
-
 	const Contract& contract = getBiddingManager().getContract();
 
-	const size_t lastTrickWinnerTeam = getLastTrickWinnerTeam();
-	int score = 0;
-	for (const Card* card : m_teamCards[teamIndex])
+	size_t score = 0;
+	for (const Card* card : cards)
 	{
 		score += card->getScore(contract.isTrumpCard(*card));
 	}
 
-	if (lastTrickWinnerTeam == teamIndex)
-	{
-		score += 10;
-	}
+	return score;
+}
+
+std::pair<size_t, size_t> Round::calculateTeamScore() const
+{
+	// TODO: Declarations not implemented yet
+
+	const Contract& contract = getBiddingManager().getContract();
+
+	size_t score[] = { calculatePointsFromCards(m_teamCards[0]), calculatePointsFromCards(m_teamCards[1]) };
+
+	const size_t lastTrickWinnerTeam = getLastTrickWinnerTeam();
+	score[lastTrickWinnerTeam] += 10;
 
 	if (contract.getType() == Contract::Type::NoTrumps)
 	{
-		score *= 2;
+		score[0] *= 2;
+		score[1] *= 2;
 	}
 
+	// Vytre
+	const size_t winningTeam = score[0] >= score[1] ? 0 : 1;
+	if (contract.getPlayer()->getTeamIndex() != winningTeam)
+	{
+		score[winningTeam] += score[contract.getPlayer()->getTeamIndex()];
+		score[contract.getPlayer()->getTeamIndex()] = 0;
+	}
+
+	const size_t totalPoints = std::round((score[0] + score[1]) / 10.f);
+
 	const int ceilingPoint = contract.getType() == Contract::Type::AllTrumps ? 4 : (contract.getType() == Contract::Type::NoTrumps ? 5 : 6);
-	score = (score % 10 >= ceilingPoint) ? std::ceil(score / 10.f) : std::floor(score / 10.f);
+	score[0] = (score[0] % 10 >= ceilingPoint) ? std::ceil(score[0] / 10.f) : std::floor(score[0] / 10.f);
+	score[1] = (score[1] % 10 >= ceilingPoint) ? std::ceil(score[1] / 10.f) : std::floor(score[1] / 10.f);
 
-	score *= getBiddingManager().getContract().getScoreMultiplier();
+	// Fix rounding issue
+	if (score[0] + score[1] > totalPoints)
+	{
+		size_t& smaller = score[0] < score[1] ? score[0] : score[1];
+		--smaller;
+	}
 
-	return score;
+	for (size_t i = 0; i < 2; ++i)
+	{
+		if (m_teamCards[i].size() == 32)
+		{
+			score[i] += ALL_TRICKS_WINNER_BONUS_SCORE;
+			break;
+		}
+	}
+
+	score[0] *= getBiddingManager().getContract().getScoreMultiplier();
+	score[1] *= getBiddingManager().getContract().getScoreMultiplier();
+
+	return { score[0], score[1] };
 }
 
 void Round::collectTrickCards()

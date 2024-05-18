@@ -13,6 +13,22 @@ Player::Player(int teamIndex, int playerIndex, Belote& belote)
 	updateName();
 }
 
+void Player::addCard(const Card& card)
+{
+	// Can't use lower_bound (insertion sort) because sorting might have changed if the contract has changed.
+	// We need to resort when contract changed but for ease we sort on every card. MaxCards is 8 so this will not hit performance.
+	m_cards.push_back(&card);
+	std::sort(m_cards.begin(), m_cards.end(), [this](const Card* lhs, const Card* rhs)
+	{
+		const bool is_trump = lhs->getSuit() == rhs->getSuit() && m_belote->getCurrentRound().getBiddingManager().getContract().isTrumpCard(*lhs);
+
+		const int32_t lhs_suit = (int8_t)lhs->getSuit() * 100;
+		const int32_t rhs_suit = (int8_t)rhs->getSuit() * 100;
+
+		return lhs_suit == rhs_suit ? Contract::cardRankCompare(*lhs, *rhs, is_trump) == -1 : lhs_suit < rhs_suit;
+	});
+}
+
 void Player::updateName()
 {
 	m_nameForUI = std::format("Player {} ({})", m_playerIndex, m_isHuman ? "human" : "AI");

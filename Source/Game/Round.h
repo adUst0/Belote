@@ -24,7 +24,8 @@ public:
 	const Belote&						getBelote() const {return *m_belote;}
 
 	size_t								getLastTrickWinnerTeam() const;
-	size_t								calculateTeamScore(size_t teamIndex) const;
+	size_t								calculatePointsFromCards(const std::vector<const Card*>& cards) const;
+	std::pair<size_t, size_t>			calculateTeamScore() const;
 
 	void								collectTrickCards();
 	std::vector<const Card*>			getPlayedCards() const;

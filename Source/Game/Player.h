@@ -10,7 +10,7 @@ class Player
 public:
 	Player(int teamIndex, int playerIndex, Belote& belote);
 
-	void										addCard(const Card& card) { m_cards.push_back(&card); }
+	void										addCard(const Card& card);
 
 	const std::vector<const Card*>&				getCards() const { return m_cards; }
 	void										returnCards();

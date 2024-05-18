@@ -61,6 +61,7 @@ Belote::Belote()
 	}
 	// Shuffle cards only for the first game
 	std::shuffle(m_deck.begin(), m_deck.end(), std::default_random_engine((unsigned int)std::chrono::system_clock::now().time_since_epoch().count()));
+	//std::shuffle(m_deck.begin(), m_deck.end(), std::default_random_engine(0u));
 
 	m_teamTotalScore[0] = m_teamTotalScore[1] = 0;
 
@@ -280,7 +281,7 @@ void Belote::updateChooseContractState()
 	if (getCurrentRound().getBiddingManager().isBiddingOver())
 	{
 		// Go back to the original first player
-		m_activePlayerIndex = getNextPlayerIndex();
+		m_activePlayerIndex = getNextPlayerIndex(m_dealingPlayerIndex);
 
 		if (getCurrentRound().getBiddingManager().getContract().getType() == Contract::Type::Pass)
 		{
@@ -358,8 +359,10 @@ void Belote::updateCollectTrickCardsAndUpdate()
 
 void Belote::enterCalculateEndOfRoundScore()
 {
-	m_teamTotalScore[0] = getCurrentRound().calculateTeamScore(0);
-	m_teamTotalScore[1] = getCurrentRound().calculateTeamScore(1);
+	auto score = getCurrentRound().calculateTeamScore();
+
+	m_teamTotalScore[0] += score.first;
+	m_teamTotalScore[1] += score.second;
 }
 
 void Belote::updateCalculateEndOfRoundScore()
