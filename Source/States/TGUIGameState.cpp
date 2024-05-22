@@ -31,16 +31,11 @@ namespace
 	tgui::Layout2d						DECK_POSITION{ "1%", "1%" };
 	const float							DECK_CARDS_OFFSET = 9;
 
-	/*const int							CARD_DEALING_TIME_MS = 750;
+	const int							CARD_DEALING_TIME_MS = 750;
 	const int							TRICK_END_WAIT_TIME_MS = 2000;
 	const float							AI_BIDDING_WAIT_TIME = 2.f;
 	const float							CONTRACT_VOTE_LABEL_TIMEOUT = 2.f;
-	const float							WAIT_TIME_AFTER_PLAYING = 2.f;*/
-	const int							CARD_DEALING_TIME_MS = 100;
-	const int							TRICK_END_WAIT_TIME_MS = 500;
-	const float							AI_BIDDING_WAIT_TIME = 0.5f;
-	const float							CONTRACT_VOTE_LABEL_TIMEOUT = 2.f;
-	const float							WAIT_TIME_AFTER_PLAYING = 0.5f;
+	const float							WAIT_TIME_AFTER_PLAYING = 2.f;
 
 	const char							BG_COLOR_GREEN[] = "#33b249";
 	const char							BG_COLOR_RED[] = "#dd7973";

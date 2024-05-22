@@ -25,8 +25,6 @@ public:
 	void										setContractVote(const Contract& c) { m_contractVote = c; }
 	bool										applyContractVoteIfReady();
 
-
-
 	bool										isPlayCardRequired() const { return m_playCardRequired; }
 	void										setPlayCardRequired();
 	void										playCard(const Card& card);
