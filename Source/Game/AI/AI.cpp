@@ -41,18 +41,70 @@ const Card* DummyAI::chooseCardToPlay(const Player& player)
 Contract AI::chooseContractVote(const Player& player)
 {
 	/*
+	struct ContractTypeBonuses
+	{
+		BonusList m_additiveBonuses;
+		BonusList m_multiplicativeBonuses;
+	 
+		float calculateValue() { return (sum of all additive bonuses) * ( 1 + sum of all multiplicative bonuses); } 
+	};
+	 
+	map<Contract::Type, ContractTypeBonuses> contracts;
+
+	contracts[Pass] = {
+		{//additive bonuses
+			Constant(preconditions: {}, 50) 
+		}, 
+		{//multiplicative bonuses
+			
+		}
+	};
+
+	contracts[Clubs] = {
+		{//additive bonuses
+			Constant(preconditions: { haveCards({ J Clubs }) }, 35),
+			Constant(preconditions: { haveCards({ 9 Clubs }) }, 15),
+			Constant(preconditions: { haveCards({ A Diamonds }) }, 5),
+			Constant(preconditions: { haveCards({ A Hearts }) }, 5),
+			Constant(preconditions: { haveCards({ A Spades }) }, 5),
+			ProgressiveBonusForEachCardFromColour(preconditions: 
+												{
+													haveCards(J and 9 Clubs),
+													haveAtLeastNCardsFromColor(Clubs, 3)
+												},
+												initialValue = -5,
+												step = 5)
+		},
+		{//multiplicative bonuses
+			Constant(preconditions: 
+					{
+						hasAllyVotedForOtherColorThan(Clubs),
+						!hasVotedAnythingDifferentThanPass(),
+						willTeamPlayFirst(ALLIES)
+					},
+					0.2),
+			Constant(preconditions:
+					{
+						hasTeamVotedForOtherColorThan(ENEMIES, Clubs)
+					}, 
+					0.1)
+		}
+	};
+	*/
+
+	/*
 	* Condition: class with operator()
 		* haveCards(cards[])
 		* haveAtLeastNCardsFromColor(color)
+		* hasAllyVotedForOtherColorThan(color)
 		* hasTeamVotedForOtherColorThan(whichTeam, color)
-		* hasPlayerVotedAnythingDifferentThanPass(player)
+		* hasVotedAnythingDifferentThanPass(player)
 		* willTeamPlayFirst(whichTeam)
-	* AdditiveBonus(list of conditions, initialValue, step[[maybe unused]])
+	* AdditiveBonus(list of conditions, initialValue, step[[maybe unused]]). Or empty constructor, pure virtual function calculate_value()
 	* MultiplicativeBonus(list of conditions, value)
 	* 
-	* AdditiveBonuses
-		* Constant(no conditions, constant value) - used for Pass
-		* HaveCardsFlatBonus(preconditions list, cards[], value)
+	* Types of Bonuses
+		* Constant(preconditions, value) - used for Pass with no preconditions
 		* ProgressiveBonusForEachCardFromColour(preconditions, Colour, initialValue, step) example with Clubs: precondition is haveCards(J and 9) and haveAtLeastNCardsFromColor(3), initialValue=-5, step=5. So 3 cards is 10, 4 cards is 15, 5 cards is 20
 	*/
 
