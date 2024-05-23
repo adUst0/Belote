@@ -38,98 +38,365 @@ const Card* DummyAI::chooseCardToPlay(const Player& player)
 	return player.getCards()[0];
 }
 
+using CardInfo = std::pair<Rank, Suit>;
+
+namespace BiddingConditions
+{
+	class BiddingConditionBase
+	{
+	public:
+		BiddingConditionBase(bool negate = false) : m_negate(negate) {}
+		virtual ~BiddingConditionBase() = default;
+
+		bool operator()() const {
+			return m_negate ? !checkCondition() : checkCondition();
+		}
+
+	private:
+		virtual bool checkCondition() const = 0;
+
+		bool m_negate = false;
+	};
+
+	class HaveCards : public BiddingConditionBase
+	{
+	public:
+		HaveCards(const std::vector<CardInfo>& cards, bool negate = false) : BiddingConditionBase(negate), m_cards(cards) {}
+
+		static std::shared_ptr<BiddingConditionBase> create(const std::vector<CardInfo>& cards, bool negate = false)
+		{
+			std::shared_ptr<BiddingConditionBase> ptr = std::make_shared<HaveCards>(cards, negate);
+			return ptr;
+		}
+
+	private:
+		bool checkCondition() const override
+		{
+			const auto& activePlayerCards = AI::getBelote().getActivePlayer().getCards();
+			return std::all_of(m_cards.begin(), m_cards.end(), [&activePlayerCards](const CardInfo& cardInfo)
+			{
+				return std::find_if(activePlayerCards.begin(), activePlayerCards.end(), [&cardInfo](const Card* card)
+				{
+					return card->getRank() == cardInfo.first &&
+						card->getSuit() == cardInfo.second;
+				}) != activePlayerCards.end();
+			});
+		}
+
+		std::vector<CardInfo> m_cards;
+	};
+
+	class HaveAtLeastNCardsFromSuit : public BiddingConditionBase
+	{
+	public:
+		HaveAtLeastNCardsFromSuit(Suit suit, size_t numCards, bool negate = false)
+			: BiddingConditionBase(negate)
+			, m_suit(suit)
+			, m_numCards(numCards)
+		{}
+
+		template <typename...Params>
+		static std::shared_ptr<BiddingConditionBase> create(Params&&... params)
+		{
+			std::shared_ptr<BiddingConditionBase> ptr = std::make_shared<HaveAtLeastNCardsFromSuit>(std::forward<Params>(params)...);
+			return ptr;
+		}
+	private:
+		bool checkCondition() const override
+		{
+			const auto& activePlayerCards = AI::getBelote().getActivePlayer().getCards();
+			return std::count_if(activePlayerCards.begin(), activePlayerCards.end(), [suit = m_suit](const Card* card)
+			{
+				return card->getSuit() == suit;
+			}) >= (int)m_numCards;
+		}
+
+		Suit m_suit;
+		size_t m_numCards;
+	};
+}
+
+namespace BiddingWeightGenerator
+{
+	using PreconditionsVec = std::vector<std::shared_ptr<BiddingConditions::BiddingConditionBase>>;
+
+	class BiddingWeightGeneratorBase
+	{
+	public:
+		BiddingWeightGeneratorBase(const PreconditionsVec& preconditions)
+			: m_preconditions(preconditions)
+		{}
+
+		virtual ~BiddingWeightGeneratorBase() = default;
+
+		float generateWeight() const
+		{
+			for (auto& condition : m_preconditions)
+			{
+				if (!(*condition)())
+				{
+					return 0.f;
+				}
+			}
+
+			return generateWeightImpl();
+		}
+	
+	protected:
+		virtual float generateWeightImpl() const = 0;
+
+		PreconditionsVec m_preconditions;
+	};
+
+	class Constant : public BiddingWeightGeneratorBase
+	{
+	public:
+		Constant(const PreconditionsVec& preconditions, float value)
+			: BiddingWeightGeneratorBase(preconditions)
+			, m_value(value)
+		{}
+
+		template <typename...Params>
+		static std::shared_ptr<BiddingWeightGeneratorBase> create(Params&&... params)
+		{
+			std::shared_ptr<BiddingWeightGeneratorBase> ptr = std::make_shared<Constant>(std::forward<Params>(params)...);
+			return ptr;
+		}
+
+	private:
+		float generateWeightImpl() const { return m_value; }
+
+		float m_value;
+	};
+}
+
+using GeneratorVec = std::vector<std::shared_ptr<BiddingWeightGenerator::BiddingWeightGeneratorBase>>;
+
+class ContractWeight
+{
+public:
+	ContractWeight() = default;
+	ContractWeight(const GeneratorVec& additiveGenerators, const GeneratorVec& multiplicativeGenerators)
+		: m_additiveGenerators(additiveGenerators)
+		, m_multiplicativeGenerators(multiplicativeGenerators)
+	{
+
+	}
+
+	float calculateWeight() const
+	{
+		float weight = 0;
+
+		for (auto& generator : m_additiveGenerators)
+		{
+			weight += generator->generateWeight();
+		}
+
+		float multiplier = 1.f;
+		for (auto& generator : m_multiplicativeGenerators)
+		{
+			multiplier += generator->generateWeight();
+		}
+
+		weight *= multiplier;
+
+		return weight;
+	}
+
+private:
+	GeneratorVec m_additiveGenerators;
+	GeneratorVec m_multiplicativeGenerators;
+
+};
+
+CardInfo operator"" _c(const char* c, std::size_t)
+{
+	char buff[101];
+	strcpy_s(buff, 100, c);
+
+	Rank rank(Rank::Seven);
+	Suit suit(Suit::Clubs);
+
+	char* nextToken = nullptr;
+	char* nextToken2 = nullptr;
+	const char* token = strtok_s(buff, " ", &nextToken);
+	if (token)
+	{
+		if (strcmp(token, "7") == 0)
+		{
+			rank = Rank::Seven;
+		}
+		else if (strcmp(token, "8") == 0)
+		{
+			rank = Rank::Eight;
+		}
+		else if (strcmp(token, "9") == 0)
+		{
+			rank = Rank::Nine;
+		}
+		else if (strcmp(token, "10") == 0)
+		{
+			rank = Rank::Ten;
+		}
+		else if (strcmp(token, "J") == 0)
+		{
+			rank = Rank::Jack;
+		}
+		else if (strcmp(token, "Q") == 0)
+		{
+			rank = Rank::Queen;
+		}
+		else if (strcmp(token, "K") == 0)
+		{
+			rank = Rank::King;
+		}
+		else if (strcmp(token, "A") == 0)
+		{
+			rank = Rank::Ace;
+		}
+		else
+		{
+			__debugbreak();
+		}
+	}
+	else __debugbreak();
+
+	token = strtok_s(nextToken, " ", &nextToken2);
+	if (token)
+	{
+		if (strcmp(token, "Clubs") == 0)
+		{
+			suit = Suit::Clubs;
+		}
+		else if (strcmp(token, "Diamonds") == 0)
+		{
+			suit = Suit::Diamonds;
+		}
+		else if (strcmp(token, "Hearts") == 0)
+		{
+			suit = Suit::Hearts;
+		}
+		else if (strcmp(token, "Spades") == 0)
+		{
+			suit = Suit::Spades;
+		}
+		else
+		{
+			__debugbreak();
+		}
+	}
+	else __debugbreak();
+
+	return { rank, suit };
+}
+
+std::map<Contract::Type, ContractWeight> createContractWeights()
+{
+	std::map<Contract::Type, ContractWeight> contractWeights;
+
+	using namespace BiddingConditions;
+	using namespace BiddingWeightGenerator;
+
+	contractWeights[Contract::Type::Pass] = {
+		{/*additive*/
+			Constant::create(PreconditionsVec{}, 50.f)
+		},
+		{}/*multiplicative*/
+	};
+
+	contractWeights[Contract::Type::Clubs] = ContractWeight{
+		{/*additive*/
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Clubs"_c})}, 35.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"9 Clubs"_c})}, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Diamonds"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Hearts"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Spades"_c})}, 5.f),
+
+			// Additional cards from the suit
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Clubs"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Clubs, 3) }, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Clubs"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Clubs, 4) }, 20.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Clubs"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Clubs, 5) }, 25.f),
+		},
+		{}/*multiplicative*/
+	};
+
+	contractWeights[Contract::Type::Diamonds] = ContractWeight{
+		{/*additive*/
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Diamonds"_c})}, 35.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"9 Diamonds"_c})}, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Clubs"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Hearts"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Spades"_c})}, 5.f),
+
+			// Additional cards from the suit
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Diamonds"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Diamonds, 3) }, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Diamonds"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Diamonds, 4) }, 20.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Diamonds"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Diamonds, 5) }, 25.f),
+		},
+		{}/*multiplicative*/
+	};
+
+	contractWeights[Contract::Type::Hearts] = ContractWeight{
+		{/*additive*/
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Hearts"_c})}, 35.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"9 Hearts"_c})}, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Clubs"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Diamonds"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Spades"_c})}, 5.f),
+
+			// Additional cards from the suit
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Hearts"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Hearts, 3) }, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Hearts"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Hearts, 4) }, 20.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Hearts"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Hearts, 5) }, 25.f),
+		},
+		{}/*multiplicative*/
+	};
+
+	contractWeights[Contract::Type::Spades] = ContractWeight{
+		{/*additive*/
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Spades"_c})}, 35.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"9 Spades"_c})}, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Clubs"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Diamonds"_c})}, 5.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"A Hearts"_c})}, 5.f),
+
+			// Additional cards from the suit
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Spades"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Spades, 3) }, 15.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Spades"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Spades, 4) }, 20.f),
+			Constant::create(PreconditionsVec{ HaveCards::create({"J Spades"_c}), HaveAtLeastNCardsFromSuit::create(Suit::Spades, 5) }, 25.f),
+		},
+		{}/*multiplicative*/
+	};
+
+	return contractWeights;
+}
+
+
 Contract AI::chooseContractVote(const Player& player)
 {
-	/*
-	struct ContractTypeBonuses
+	static std::map<Contract::Type, ContractWeight> contractWeights = createContractWeights();
+
+	std::vector<std::pair<Contract, float>> contracts;
+
+	for (auto& [contractType, contractWeight] : contractWeights)
 	{
-		BonusList m_additiveBonuses;
-		BonusList m_multiplicativeBonuses;
-	 
-		float calculateValue() { return (sum of all additive bonuses) * ( 1 + sum of all multiplicative bonuses); } 
-	};
-	 
-	map<Contract::Type, ContractTypeBonuses> contracts;
-
-	contracts[Pass] = {
-		{//additive bonuses
-			Constant(preconditions: {}, 50) 
-		}, 
-		{//multiplicative bonuses
-			
+		Contract contract(contractType, &player);
+		if (AI::getBelote().getCurrentRound().getBiddingManager().canBid(contract))
+		{
+			contracts.emplace_back(std::move(contract), contractWeight.calculateWeight());
 		}
-	};
+	}
 
-	contracts[Clubs] = {
-		{//additive bonuses
-			Constant(preconditions: { haveCards({ J Clubs }) }, 35),
-			Constant(preconditions: { haveCards({ 9 Clubs }) }, 15),
-			Constant(preconditions: { haveCards({ A Diamonds }) }, 5),
-			Constant(preconditions: { haveCards({ A Hearts }) }, 5),
-			Constant(preconditions: { haveCards({ A Spades }) }, 5),
-			ProgressiveBonusForEachCardFromColour(preconditions: 
-												{
-													haveCards(J and 9 Clubs),
-													haveAtLeastNCardsFromColor(Clubs, 3)
-												},
-												initialValue = -5,
-												step = 5)
-		},
-		{//multiplicative bonuses
-			Constant(preconditions: 
-					{
-						hasAllyVotedForOtherColorThan(Clubs),
-						!hasVotedAnythingDifferentThanPass(),
-						willTeamPlayFirst(ALLIES)
-					},
-					0.2),
-			Constant(preconditions:
-					{
-						hasTeamVotedForOtherColorThan(ENEMIES, Clubs)
-					}, 
-					0.1)
-		}
-	};
-	*/
+	if (!contracts.empty())
+	{
+		std::sort(contracts.begin(), contracts.end(), [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+		return contracts.back().first;
+	}
 
-	/*
-	* Condition: class with operator()
-		* haveCards(cards[])
-		* haveAtLeastNCardsFromColor(color)
-		* hasAllyVotedForOtherColorThan(color)
-		* hasTeamVotedForOtherColorThan(whichTeam, color)
-		* hasVotedAnythingDifferentThanPass(player)
-		* willTeamPlayFirst(whichTeam)
-	* AdditiveBonus(list of conditions, initialValue, step[[maybe unused]]). Or empty constructor, pure virtual function calculate_value()
-	* MultiplicativeBonus(list of conditions, value)
-	* 
-	* Types of Bonuses
-		* Constant(preconditions, value) - used for Pass with no preconditions
-		* ProgressiveBonusForEachCardFromColour(preconditions, Colour, initialValue, step) example with Clubs: precondition is haveCards(J and 9) and haveAtLeastNCardsFromColor(3), initialValue=-5, step=5. So 3 cards is 10, 4 cards is 15, 5 cards is 20
-	*/
-
-
-	// Pass = 49%
-	// Clubs - pts for J, 9. Points for each card. Points for declarations. Points for A from different suits. Multiplier for lower colour from Ally / Enemy
-		// J=35, 9=15, each of the same color=5*(num-1), each A from other color = 5. If ally said colour & this is your first vote & your team is first *1.20. If enemy said color, *1.1
-	
-	// Diamonds
-	// Hearts
-	// Spades
-	// No Trumps - pts for each A. *2 if we have 10 of same color. Bonus if no J / 9. Multiplier if current contract is colour from enemy and we don't have of it.
-		// A=20, A+10=40 + 5 for each additional, J=-2, 9=-1. If ally said colour *0.6. If enemy said colour and you don't have it *1.2
-	
-	// All Trumps - pts for J, pts for J + 9.
-		// Pts for J = 25, Pts for J+9 = 35 + 5 for each additional from colour, Pts for 9+another 2 cards = 15. | -20% for each color said by enemy | +40% for each color said by ally
- 
-	// Double
-		// if you have the points for this vote and it is called by the enemy
-	// Redouble
-		// // if you have the points for this vote * 0.8 and it is called by the enemy
 	return Contract(Contract::Type::Pass, &player);
 }
 
-const Card* AI::chooseCardToPlay(const Player& player)
+const Card* AI::chooseCardToPlay(const Player& /*player*/)
 {
 	// AllTrumps
 

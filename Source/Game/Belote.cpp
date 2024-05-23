@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "Application.h"
 #include <cmath>
+#include "ai/AI.h"
 
 namespace
 {
@@ -34,6 +35,8 @@ std::vector<std::unique_ptr<Card>> Belote::s_cards;
 
 Belote::Belote()
 {
+	AI::setBelote(*this); // todo: refactor some day
+
 	// Initial creation of all Card objects
 	if (s_cards.empty())
 	{
@@ -290,6 +293,8 @@ void Belote::updateChooseContractState()
 			{
 				player_ptr->returnCards();
 			}
+
+			createNewRound();
 		}
 
 		enterState(BeloteState::DealCardsToActivePlayer);

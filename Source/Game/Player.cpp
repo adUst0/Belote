@@ -62,7 +62,8 @@ bool Player::applyContractVoteIfReady()
 {
 	if (!m_isHuman)
 	{
-		Contract vote = DummyAI::chooseContractVote(*this);
+		//Contract vote = DummyAI::chooseContractVote(*this);
+		Contract vote = AI::chooseContractVote(*this);
 		assert(m_belote->getCurrentRound().getBiddingManager().canBid(vote));
 		m_belote->getCurrentRound().getBiddingManager().bid(std::move(vote));
 		m_contractVoteRequired = false;
