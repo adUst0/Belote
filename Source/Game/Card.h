@@ -47,9 +47,13 @@ public:
 
 	int								getScore(bool isTrump) const;
 
+	bool							operator==(const Card& rhs) const;
+
 private:
 	Suit							m_suit;
 	Rank							m_rank;
 	std::string						m_toString;
 	std::string						m_texturePath;
 };
+
+Card operator"" _c(const char* c, std::size_t);

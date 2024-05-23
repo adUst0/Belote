@@ -63,7 +63,7 @@ bool Player::applyContractVoteIfReady()
 	if (!m_isHuman)
 	{
 		//Contract vote = DummyAI::chooseContractVote(*this);
-		Contract vote = AI::chooseContractVote(*this);
+		Contract vote = AI::AI::chooseContractVote(*this);
 		assert(m_belote->getCurrentRound().getBiddingManager().canBid(vote));
 		m_belote->getCurrentRound().getBiddingManager().bid(std::move(vote));
 		m_contractVoteRequired = false;
@@ -86,7 +86,7 @@ void Player::setPlayCardRequired()
 
 	if (!m_isHuman)
 	{
-		const Card* card = DummyAI::chooseCardToPlay(*this);
+		const Card* card = AI::DummyAI::chooseCardToPlay(*this);
 		const bool validMove = card && m_belote->getCurrentRound().getCurrentTrick().canPlayCard(*card);
 		assert(validMove);
 		playCard(*card);

@@ -35,7 +35,7 @@ std::vector<std::unique_ptr<Card>> Belote::s_cards;
 
 Belote::Belote()
 {
-	AI::setBelote(*this); // todo: refactor some day
+	AI::AI::setBelote(*this); // todo: refactor some day
 
 	// Initial creation of all Card objects
 	if (s_cards.empty())

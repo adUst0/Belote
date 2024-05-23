@@ -4,6 +4,7 @@
 #include <format>
 #include <string>
 #include <cassert>
+#include <sstream>
 
 namespace
 {
@@ -35,6 +36,23 @@ std::array<std::string, (int8_t)Rank::Num> rankStrings
 	"king"
 };
 
+std::array<std::string, (int8_t)Rank::Num> rankStrings2
+{
+	"a",
+	"2",
+	"3",
+	"4",
+	"5",
+	"6",
+	"7",
+	"8",
+	"9",
+	"10",
+	"j",
+	"q",
+	"k"
+};
+
 const std::string& stringFromSuit(Suit suit)
 {
 	return (int8_t)suit >= (int8_t)Suit::Num ? empty_string : suitStrings[(int8_t)suit];
@@ -43,6 +61,56 @@ const std::string& stringFromSuit(Suit suit)
 const std::string& stringFromRank(Rank rank)
 {
 	return (int8_t)rank >= (int8_t)Rank::Num ? empty_string : rankStrings[(int8_t)rank];
+}
+
+Suit suitFromString(const std::string& str)
+{
+	for (int8_t i = 0; i < (int8_t)Suit::Num; ++i)
+	{
+		if (str == suitStrings[i])
+		{
+			return Suit(i);
+		}
+	}
+
+	return Suit::Num;
+}
+
+Rank rankFromString(const std::string& str)
+{
+	for (int8_t i = 0; i < (int8_t)Rank::Num; ++i)
+	{
+		if (str == rankStrings[i] || str == rankStrings2[i])
+		{
+			return Rank(i);
+		}
+	}
+
+	return Rank::Num;
+}
+
+Card operator"" _c(const char* c, std::size_t)
+{
+	std::string cardStr(c);
+	std::transform(cardStr.begin(), cardStr.end(), cardStr.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+
+	std::stringstream ss(cardStr);
+
+	std::string rankStr;
+	std::getline(ss, rankStr, ' ');
+	std::string suitStr;
+	std::getline(ss, suitStr, ' ');
+
+	Rank rank = rankFromString(rankStr);
+	Suit suit = suitFromString(suitStr);
+
+	if (rank == Rank::Num || suit == Suit::Num)
+	{
+		__debugbreak();
+	}
+
+	return { suit, rank };
 }
 
 Card::Card(Suit suit, Rank rank)
@@ -77,4 +145,9 @@ int Card::getScore(bool isTrump) const
 		return -1;
 		break;
 	}
+}
+
+bool Card::operator==(const Card& rhs) const
+{
+	return m_suit == rhs.m_suit && m_rank == rhs.m_rank;
 }

@@ -19,6 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Game\AI\AIConfig.cpp" />
+    <ClCompile Include="Source\Game\AI\BiddingWeightGeneratorManager.cpp" />
+    <ClCompile Include="Source\Game\AI\BiddingWeightGenerator.cpp" />
+    <ClCompile Include="Source\Game\AI\BiddingCondition.cpp" />
     <ClCompile Include="Source\Engine\Application.cpp" />
     <ClCompile Include="Source\Engine\AssetManager.cpp" />
     <ClCompile Include="Source\Engine\InputManager.cpp" />
@@ -43,6 +47,10 @@
     <ClCompile Include="Source\States\TGUIGameState.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Game\AI\AIConfig.h" />
+    <ClInclude Include="Source\Game\AI\BiddingWeightGeneratorManager.h" />
+    <ClInclude Include="Source\Game\AI\BiddingWeightGenerator.h" />
+    <ClInclude Include="Source\Game\AI\BiddingCondition.h" />
     <ClInclude Include="Source\Engine\Application.h" />
     <ClInclude Include="Source\Engine\AssetManager.h" />
     <ClInclude Include="Source\Engine\InputManager.h" />
