@@ -55,6 +55,8 @@ namespace AI
 			{
 				contractsWeights.emplace_back(std::move(contract), contractManager.calculateWeight());
 			}
+
+			// TODO: doubles/redoubles
 		}
 
 		if (!contractsWeights.empty())

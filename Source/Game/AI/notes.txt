@@ -101,7 +101,7 @@
 	// Hearts
 	// Spades
 	// No Trumps - pts for each A. *2 if we have 10 of same color. Bonus if no J / 9. Multiplier if current contract is colour from enemy and we don't have of it.
-		// A=20, A+10=40 + 5 for each additional, J=-2, 9=-1. If ally said colour *0.6. If enemy said colour and you don't have it *1.2
+		// A=15, A+10=35 + 5 for each additional, J=-2, 9=-1. If ally said colour *0.6. If enemy said colour and you don't have it *1.2
 	
 	// All Trumps - pts for J, pts for J + 9.
 		// Pts for J = 25, Pts for J+9 = 35 + 5 for each additional from colour, Pts for 9+another 2 cards = 15. | -20% for each color said by enemy | +40% for each color said by ally
