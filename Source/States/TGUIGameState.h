@@ -6,13 +6,13 @@
 #include "TGUI/Widgets/Button.hpp"
 #include "Observer.h"
 
-class NotifyCardDealing;
-class NotifyContractVote;
-class NotifyCardAboutToBePlayed;
-class NotifyEndOfTrick;
-class NotifyEndOfRound;
-class NotifyNewRound;
-class NotifyContractVoteRequired;
+struct NotifyCardDealing;
+struct NotifyContractVote;
+struct NotifyCardAboutToBePlayed;
+struct NotifyEndOfTrick;
+struct NotifyEndOfRound;
+struct NotifyNewRound;
+struct NotifyContractVoteRequired;
 struct NotifyPlayCardRequired;
 
 using LabelPtr = tgui::Label::Ptr;

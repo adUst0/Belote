@@ -450,12 +450,12 @@ void TGUIGameState::notify(const NotifyEndOfTrick& data)
 	}
 }
 
-void TGUIGameState::notify(const NotifyEndOfRound& data)
+void TGUIGameState::notify(const NotifyEndOfRound& /*data*/)
 {
 	updateInfoPanel();
 }
 
-void TGUIGameState::notify(const NotifyNewRound& data)
+void TGUIGameState::notify(const NotifyNewRound& /*data*/)
 {
 	size_t cardIndex = 0;
 	for (const Card* card : m_belote.getDeck())
@@ -469,7 +469,7 @@ void TGUIGameState::notify(const NotifyNewRound& data)
 	updateInfoPanel();
 }
 
-void TGUIGameState::notify(const NotifyPlayCardRequired& data)
+void TGUIGameState::notify(const NotifyPlayCardRequired& /*data*/)
 {
 	if (!m_belote.getActivePlayer().isHuman())
 	{

@@ -4,16 +4,16 @@
 #include "Belote.h"
 #include "Application.h"
 
-bool Trick::canPlayCard(const Card& card) const
+bool Trick::canPlayCard(const Card& card, const Player* activePlayer /*= nullptr*/) const
 {
-	if (m_turns.empty())
+	if (!anyCardPlayed())
 	{
 		return true;
 	}
 
 	const Contract& contract = m_round->getBiddingManager().getContract();
 
-	const Player& player = m_round->getBelote().getActivePlayer();
+	const Player& player = activePlayer ? *activePlayer : m_round->getBelote().getActivePlayer();
 	const Card* firstCard = m_turns.front().m_card;
 	const bool isFirstCardTrump = contract.isTrumpCard(*firstCard);
 
@@ -77,16 +77,19 @@ bool Trick::canPlayCard(const Card& card) const
 	return isCardHigherTrump || !hasPlayerHigherTrump;
 }
 
-void Trick::playCard(const Card& card)
+void Trick::playCard(const Card& card, const Player* activePlayer /*= nullptr*/)
 {
-	if (!canPlayCard(card))
+	if (!canPlayCard(card, activePlayer))
 	{
 		Utils::crashGame();
 	}
 
-	static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).notifyObservers(NotifyCardAboutToBePlayed(m_round->getBelote().getActivePlayer(), card));
-	
-	m_turns.emplace_back(&card, &m_round->getBelote().getActivePlayer());
+	if (!m_isSimulation)
+	{
+		static_cast<Subject<NotifyCardAboutToBePlayed>&>(*Application::getInstance()).notifyObservers(NotifyCardAboutToBePlayed(m_round->getBelote().getActivePlayer(), card));
+	}
+
+	m_turns.emplace_back(&card, activePlayer ? activePlayer : &m_round->getBelote().getActivePlayer());
 
 	if (isOver())
 	{
@@ -96,7 +99,7 @@ void Trick::playCard(const Card& card)
 
 const TrickTurn* Trick::getWinningCardTurn() const
 {
-	if (m_turns.empty())
+	if (!anyCardPlayed())
 	{
 		return nullptr;
 	}
@@ -132,7 +135,7 @@ const TrickTurn* Trick::getWinningCardTurn() const
 
 const Card* Trick::getWinningCard() const
 {
-	if (m_turns.empty())
+	if (!anyCardPlayed())
 	{
 		return nullptr;
 	}

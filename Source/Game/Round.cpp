@@ -15,9 +15,26 @@ Round::Round(const Belote* belote)
 	m_tricks.reserve(NUM_TRICKS_PER_ROUND);
 }
 
+Round::Round(const Round& other)
+{
+	m_belote = other.m_belote;
+
+	m_biddingManager = other.m_biddingManager;
+
+	m_tricks = other.m_tricks;
+	for (Trick& trick : m_tricks)
+	{
+		trick.setRound(*this);
+	}
+
+	m_teamCards = other.m_teamCards;
+
+	m_isSimulation = other.m_isSimulation;
+}
+
 void Round::createNewTrick()
 {
-	m_tricks.emplace_back(std::make_unique<Trick>(this));
+	m_tricks.emplace_back(this, m_isSimulation);
 }
 
 size_t Round::getLastTrickWinnerTeam() const
@@ -27,7 +44,7 @@ size_t Round::getLastTrickWinnerTeam() const
 		return std::numeric_limits<size_t>::max();
 	}
 
-	return m_tricks.back()->getWinningCardTurn()->m_player->getTeamIndex();
+	return m_tricks.back().getWinningCardTurn()->m_player->getTeamIndex();
 }
 
 size_t Round::calculatePointsFromCards(const std::vector<const Card*>& cards) const
@@ -115,4 +132,14 @@ std::vector<const Card*> Round::getPlayedCards() const
 	auto result = m_teamCards[0];
 	result.insert(result.end(), m_teamCards[1].begin(), m_teamCards[1].end());
 	return result;
+}
+
+void Round::setIsSimulation(bool value)
+{
+	m_isSimulation = value;
+
+	for (auto& trick : m_tricks)
+	{
+		trick.setIsSimulation(value);
+	}
 }

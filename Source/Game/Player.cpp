@@ -86,7 +86,8 @@ void Player::setPlayCardRequired()
 
 	if (!m_isHuman)
 	{
-		const Card* card = AI::DummyAI::chooseCardToPlay(*this);
+		//const Card* card = AI::DummyAI::chooseCardToPlay(*this);
+		const Card* card = AI::AI::chooseCardToPlay(*this);
 		const bool validMove = card && m_belote->getCurrentRound().getCurrentTrick().canPlayCard(*card);
 		assert(validMove);
 		playCard(*card);

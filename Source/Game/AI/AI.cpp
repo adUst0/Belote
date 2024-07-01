@@ -2,6 +2,9 @@
 #include "Utils.h"
 #include "BiddingWeightGeneratorManager.h"
 #include "AIConfig.h"
+#include "MCTS/MCTSTree.h"
+#include "BeloteGameState.h"
+#include "MCTS/MCTSNode.h"
 
 namespace
 {
@@ -68,13 +71,33 @@ namespace AI
 		return Contract(Contract::Type::Pass, &player);
 	}
 
-	const Card* AI::chooseCardToPlay(const Player& /*player*/)
+	const Card* AI::chooseCardToPlay(const Player& player)
 	{
-		// AllTrumps
+		PlayerHandsArray hands;
 
-		// Card score:
-		// is 100% win pts
-		// is unneeded card with many pts
+		// TODO: Randomize hidden cards. Implement some weighted random based on Contract voting and current play trough
+		size_t i = 0;
+		for (const auto& player_ptr : AI::getBelote().getPlayers())
+		{
+			for (const Card* card : player_ptr->getCards())
+			{
+				hands[i].push_back(card);
+			}
+
+			++i;
+		}
+
+		std::unique_ptr<MCTS::MCTSGameStateBase> initialState = std::make_unique<BeloteGameState>(AI::getBelote().getCurrentRound(), hands, player.getPlayerIndex());
+
+		const size_t maxIterations = 10000;
+		MCTS::MCTSTree tree(std::move(initialState), maxIterations);
+		auto node = tree.runMCTS();
+		// std::cout << "Tree size is: " << tree.getTreeSize(false) << std::endl;
+		if (node)
+		{
+			return static_cast<const BeloteGameState&>(node->getState()).getMoveToThisState().m_card;
+		}
+
 		return nullptr;
 	}
 
