@@ -19,6 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Game\AI\BeloteGameState.cpp" />
+    <ClCompile Include="Source\Engine\MCTS\MCTSGameStateBase.cpp" />
+    <ClCompile Include="Source\Engine\MCTS\MCTSNode.cpp" />
+    <ClCompile Include="Source\Engine\MCTS\MCTSTree.cpp" />
     <ClCompile Include="Source\Game\AI\AIConfig.cpp" />
     <ClCompile Include="Source\Game\AI\BiddingWeightGeneratorManager.cpp" />
     <ClCompile Include="Source\Game\AI\BiddingWeightGenerator.cpp" />
@@ -47,6 +51,10 @@
     <ClCompile Include="Source\States\TGUIGameState.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Game\AI\BeloteGameState.h" />
+    <ClInclude Include="Source\Engine\MCTS\MCTSGameStateBase.h" />
+    <ClInclude Include="Source\Engine\MCTS\MCTSNode.h" />
+    <ClInclude Include="Source\Engine\MCTS\MCTSTree.h" />
     <ClInclude Include="Source\Game\AI\AIConfig.h" />
     <ClInclude Include="Source\Game\AI\BiddingWeightGeneratorManager.h" />
     <ClInclude Include="Source\Game\AI\BiddingWeightGenerator.h" />
@@ -75,6 +83,9 @@
     <ClInclude Include="Source\States\StateMachine.h" />
     <ClInclude Include="Source\States\TGUISplashState.h" />
     <ClInclude Include="Source\States\TGUIGameState.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Engine\MCTS\MCTSMoveBase.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
