@@ -30,7 +30,7 @@ class TGUIGameState
 	, public Observer<NotifyPlayCardRequired>
 {
 public:
-	TGUIGameState(StateMachine& stateMachine, bool human = false);
+	TGUIGameState(StateMachine& stateMachine, bool human = false, bool showOtherPlayerCards = false);
 
 	void							createDeck();
 	void							createPlayerNames();
@@ -82,6 +82,8 @@ private:
 	std::vector<ButtonPtr>			m_contractVoteButtons;
 	
 	Belote							m_belote;
+
+	bool							m_showOtherPlayerCards = false;
 
 	float							m_delayGameSeconds = 0.f;
 	bool							m_shouldPauseGame = false;

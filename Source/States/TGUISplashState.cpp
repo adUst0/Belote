@@ -30,24 +30,24 @@ TGUISplashState::TGUISplashState(StateMachine& stateMachine)
 	buttons.reserve(numButtons);
 
 	auto button = buttons.emplace_back(tgui::Button::create("New Game"));
-	button->onPress([this]() { std::cout << "New Game button clicked. TODO - not implemented" << std::endl; });
+	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine, true, false)); });
 	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
 	button->getRenderer()->setRoundedBorderRadius(50.f);
 
-	button = buttons.emplace_back(tgui::Button::create("New Game (Debug TGUI)"));
+	/*button = buttons.emplace_back(tgui::Button::create("New Game (Debug TGUI)"));
 	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine)); });
 	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
-	button->getRenderer()->setRoundedBorderRadius(50.f);
+	button->getRenderer()->setRoundedBorderRadius(50.f);*/
 
 	button = buttons.emplace_back(tgui::Button::create("New Game Human (Debug TGUI)"));
-	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine, true)); });
+	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<TGUIGameState>(m_stateMachine, true, true)); });
 	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
 	button->getRenderer()->setRoundedBorderRadius(50.f);
 
-	button = buttons.emplace_back(tgui::Button::create("New Game (Debug Old)"));
+	/*button = buttons.emplace_back(tgui::Button::create("New Game (Debug Old)"));
 	button->onPress([this]() { m_stateMachine.pushState(std::make_unique<GameState>(m_stateMachine)); });
 	button->getRenderer()->setBackgroundColor(sf::Color(255, 255, 255, 175));
-	button->getRenderer()->setRoundedBorderRadius(50.f);
+	button->getRenderer()->setRoundedBorderRadius(50.f);*/
 
 	button = buttons.emplace_back(tgui::Button::create("Rules"));
 	button->onPress([this]() { std::cout << "Rules button clicked. TODO - not implemented" << std::endl; });

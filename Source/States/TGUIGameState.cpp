@@ -41,9 +41,10 @@ namespace
 	const char							BG_COLOR_RED[] = "#dd7973";
 }
 
-TGUIGameState::TGUIGameState(StateMachine& stateMachine, bool human /*= false*/)
+TGUIGameState::TGUIGameState(StateMachine& stateMachine, bool human /*= false*/, bool showOtherPlayerCards /*= false*/)
 	: BaseState(stateMachine)
 	, m_gui(Application::getInstance()->getWindow())
+	, m_showOtherPlayerCards(showOtherPlayerCards)
 {
 	if (human)
 	{
@@ -86,7 +87,19 @@ void TGUIGameState::createDeck()
 		auto cardWidget = tgui::Picture::create(tgui::Texture(card->getTexturePath()));
 		cardWidget->setScale(CARD_SCALE);
 		cardWidget->setPosition(getCardPositionInDeck(cardIndex));
+		cardWidget->setVisible(m_showOtherPlayerCards);
 		m_gui.add(cardWidget, card->toString());
+		++cardIndex;
+	}
+
+	cardIndex = 0;
+	for (const Card* card : m_belote.getDeck())
+	{
+		auto cardWidget = tgui::Picture::create(tgui::Texture("assets/card_back.png"));
+		cardWidget->setScale(CARD_SCALE);
+		cardWidget->setPosition(getCardPositionInDeck(cardIndex));
+		cardWidget->setVisible(!m_showOtherPlayerCards);
+		m_gui.add(cardWidget, card->toString() + "_back");
 		++cardIndex;
 	}
 }
@@ -394,15 +407,25 @@ void TGUIGameState::notify(const NotifyCardDealing& data)
 {
 	for (size_t i = 0u; i < data.m_player.getCards().size(); ++i)
 	{
-		auto cardWidget = m_gui.get(data.m_player.getCards()[i]->toString());
+		const bool isVisible = m_showOtherPlayerCards || data.m_player.isHuman();
+		tgui::Widget::Ptr visibleWidget;
+		if (isVisible)
+		{
+			visibleWidget = m_gui.get(data.m_player.getCards()[i]->toString());
+			visibleWidget->setVisible(true);
+			m_gui.get(data.m_player.getCards()[i]->toString() + "_back")->setVisible(false);
+		}
+		else
+		{
+			visibleWidget = m_gui.get(data.m_player.getCards()[i]->toString() + "_back");
+			visibleWidget->setVisible(true);
+			m_gui.get(data.m_player.getCards()[i]->toString())->setVisible(false);
+		}
+
 		auto pos = getCardPositionInPlayer(data.m_player, i);
-		cardWidget->moveToFront();
-		cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
+		visibleWidget->moveToFront();
+		visibleWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
 	}
-	//auto cardWidget = m_gui.get(data.m_card.toString());
-	//auto pos = getCardPositionInPlayer(data.m_player, data.m_player.getCards().size());
-	//cardWidget->moveToFront();
-	//cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
 }
 
 void TGUIGameState::notify(const NotifyContractVoteRequired& data)
@@ -425,9 +448,15 @@ void TGUIGameState::notify(const NotifyContractVote& data)
 
 void TGUIGameState::notify(const NotifyCardAboutToBePlayed& data)
 {
-	auto cardWidget = m_gui.get(data.m_card.toString());
+	tgui::Widget::Ptr widget = m_gui.get(data.m_card.toString());
+	widget->setVisible(true);
+	auto iter = std::find(data.m_player.getCards().begin(), data.m_player.getCards().end(), &data.m_card);
+	widget->setPosition(getCardPositionInPlayer(data.m_player, std::distance(data.m_player.getCards().begin(), iter)));
+
+	m_gui.get(data.m_card.toString() + "_back")->setVisible(false);
+
 	auto pos = getCardPositionOnTable(data.m_player);
-	cardWidget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
+	widget->moveWithAnimation(pos, CARD_DEALING_TIME_MS);
 	delayGame(WAIT_TIME_AFTER_PLAYING);
 }
 
