@@ -67,6 +67,7 @@ public:
 private:
 	void							testWidgetPositions();
 
+	void							showCardToPlayers(const Card& card, bool show);
 
 	tgui::Gui						m_gui;
 
