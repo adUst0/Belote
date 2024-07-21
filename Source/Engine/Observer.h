@@ -45,8 +45,8 @@ Observer<Data>::~Observer<Data>()
 template <typename Data>
 void Subject<Data>::registerObserver(Observer<Data>& observer)
 {
-	Utils::emplace_back_unique(m_observers, &observer);
-	Utils::emplace_back_unique(observer.m_subjects, this);
+	Utils::emplaceBackUnique(m_observers, &observer);
+	Utils::emplaceBackUnique(observer.m_subjects, this);
 }
 
 template <typename Data>

@@ -5,6 +5,7 @@
 #include "MCTS/MCTSTree.h"
 #include "BeloteGameState.h"
 #include "MCTS/MCTSNode.h"
+#include <unordered_map>
 
 namespace
 {
@@ -73,32 +74,88 @@ namespace AI
 
 	const Card* AI::chooseCardToPlay(const Player& player)
 	{
-		PlayerHandsArray hands;
+		// TODO: Refactoring - this function is too large, does tooooo many things and has some hardcoded constants
 
-		// TODO: Randomize hidden cards. Implement some weighted random based on Contract voting and current play trough
-		size_t i = 0;
-		for (const auto& player_ptr : AI::getBelote().getPlayers())
+		std::vector<const Card*> possibleMoves;
+		for (const Card* card : player.getCards())
 		{
-			for (const Card* card : player_ptr->getCards())
+			if (AI::getBelote().getCurrentRound().getCurrentTrick().canPlayCard(*card, AI::getBelote().getCurrentRound().getBelote().getPlayers()[player.getPlayerIndex()].get()))
 			{
-				hands[i].push_back(card);
+				possibleMoves.push_back(card);
+			}
+		}
+		if (possibleMoves.size() == 1)
+		{
+			return possibleMoves.back();
+		}
+
+		auto chooseCard = [&]() -> const Card*
+		{
+			PlayerHandsArray hands;
+			hands[player.getPlayerIndex()].insert(hands[player.getPlayerIndex()].end(), player.getCards().begin(), player.getCards().end());
+
+			std::vector<const Card*> hiddenCards;
+			hiddenCards.reserve(player.getCards().size() * 3);
+			for (const auto& player_ptr : AI::getBelote().getPlayers())
+			{
+				if (&player == player_ptr.get())
+				{
+					continue;
+				}
+				hiddenCards.insert(hiddenCards.end(), player_ptr->getCards().begin(), player_ptr->getCards().end());
 			}
 
-			++i;
-		}
+			// Randomize unknown cards between other players
+			for (const auto& player_ptr : AI::getBelote().getPlayers())
+			{
+				if (&player == player_ptr.get())
+				{
+					continue;
+				}
 
-		std::unique_ptr<MCTS::MCTSGameStateBase> initialState = std::make_unique<BeloteGameState>(AI::getBelote().getCurrentRound(), hands, player.getPlayerIndex());
+				std::vector<const Card*> cards;
+				std::vector<int> weights;
+				for (const Card* card : hiddenCards)
+				{
+					int weight = 1;
 
-		const size_t maxIterations = 10000;
-		MCTS::MCTSTree tree(std::move(initialState), maxIterations);
-		auto node = tree.runMCTS();
-		// std::cout << "Tree size is: " << tree.getTreeSize(false) << std::endl;
-		if (node)
+					// TODO
+
+					cards.emplace_back(card);
+					weights.emplace_back(weight);
+				}
+
+				while (hands[player_ptr->getPlayerIndex()].size() != player_ptr->getCards().size())
+				{
+					auto cardIter = Utils::weightedRandomSelect(cards.begin(), cards.end(), weights);
+					auto weightIter = weights.begin() + std::distance(cards.begin(), cardIter);
+					const Card* selectedCard = *cardIter;
+					Utils::unorderedVectorErase(cards, cardIter);
+					Utils::unorderedVectorErase(weights, weightIter);
+
+					hands[player_ptr->getPlayerIndex()].push_back(selectedCard);
+				}
+			}
+
+			std::unique_ptr<MCTS::MCTSGameStateBase> initialState = std::make_unique<BeloteGameState>(AI::getBelote().getCurrentRound(), hands, player.getPlayerIndex());
+
+			const size_t maxIterations = 1000;
+			MCTS::MCTSTree tree(std::move(initialState), maxIterations);
+			auto node = tree.runMCTS();
+			// std::cout << "Tree size is: " << tree.getTreeSize(false) << std::endl; // be careful. the tree size can be exponential
+
+			return node ? static_cast<const BeloteGameState&>(node->getState()).getMoveToThisState().m_card : nullptr;
+		};
+
+		// Have the AI run several MCTS with different randomized hidden cards and lastly choose the move that was selected the most times
+		const size_t numTries = 10;
+		std::unordered_map<const Card*, size_t> moves;
+		for (int i = 0; i < numTries; ++i)
 		{
-			return static_cast<const BeloteGameState&>(node->getState()).getMoveToThisState().m_card;
+			moves[chooseCard()]++;
 		}
-
-		return nullptr;
+		
+		return std::max_element(moves.begin(), moves.end())->first;
 	}
 
 };  // namespace AI
