@@ -10,7 +10,6 @@
 
 /* TODOs
 * Implement card ownership with unique_ptr to enforce that the card really transfers ownership
-* Round score bug: ceiling is incorrect. Got 19-8 score for all trumps
 */
 
 class Belote
